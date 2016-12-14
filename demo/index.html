@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+  <title>polymerfire-lookup demo</title>
+  <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+  <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+  <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+  <link rel="import" href="../../polymerfire/firebase-app.html">
+  <link rel="import" href="../polymerfire-lookup.html">
+  <link rel="import" href="../polymerfire-key.html">
+  <link rel="import" href="demo-stringify.html">
+  <style is="custom-style" include="demo-pages-shared-styles">
+
+  </style>
+</head>
+
+<body>
+  <div class="vertical-section-container centered">
+    <h3>Basic polymerfire-lookup demo</h3>
+    <demo-snippet>
+      <template>
+        <template is="dom-bind" id="app">
+          <firebase-app log auth-domain="pre-ignition-meta.firebaseapp.com" database-url="https://pre-ignition-meta.firebaseio.com/" api-key="AIzaSyAbLJ5nMHaFS_YXioay8b28RnV43JvoEms">
+          </firebase-app>
+          <polymerfire-lookup log id="lookup" path="/countryList" data="{{data}}">
+            <template is="dom-repeat" items="[[data]]">
+              <polymerfire-key key="code" data-root="[[item]]" path="/countryNames/[[item.$key]]/country-code"></polymerfire-key>
+            </template>
+          </polymerfire-lookup>
+          <demo-stringify data="[[data]]"></demo-stringify>
+        </template>
+      </template>
+    </demo-snippet>
+  </div>
+</body>
+<script>
+window.addEventListener('WebComponentsReady', function() {
+  app = document.querySelector('#app');
+ 
+});
+</script>
+
+</html>

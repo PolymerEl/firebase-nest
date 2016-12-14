@@ -1,0 +1,71 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../polymerfire/firebase-query.html">
+<link rel="import" href="polymerfire-lookup-query-behavior.html">
+<!--
+`polymerfire-lookup`
+polymerfire based util to construct lookup datastructure
+
+@demo demo/index.html 
+-->
+<dom-module id="polymerfire-lookup">
+  <template>
+    <style>
+    :host {
+      display: block;
+    }
+    </style>
+    <firebase-query
+      order-by-child="[[orderByChild]]"
+      order-by-value="[[orderByValue]]"
+      start-at="[[startAt]]"
+      end-at="[[endAt]]"
+      equal-to="[[equalTo]]"
+      limitTo-first="[[limitToFirst]]"
+      limitTo-last="[[limitToLast]]"
+      data="{{data}}"
+      disabled="[[disabled]]"
+      path="[[path]]"  
+      app-name="[[appName]]"
+      ></firebase-query>
+      <content></content>
+  </template>
+  <script>
+  Polymer({
+
+    is: 'polymerfire-lookup',
+
+    behaviors: [
+      Polymer.PolymerfireLookupQueyBehavior
+    ],
+
+    properties: {
+      /**
+       * Path to a Firebase root or endpoint. N.B. `path` is case sensitive.
+       */
+      path: {
+        type: String
+      },
+
+      /**
+       * The data to returned by firebase-query.
+       */
+      data: {
+        type: Object,
+        notify: true
+      },
+
+     /**
+       * When true, Firebase listeners won't be activated. This can be useful
+       * in situations where elements are loaded into the DOM before they're
+       * ready to be activated (e.g. navigation, initialization scenarios).
+       */
+      disabled: {
+        type: Boolean,
+        value: false
+      }
+
+    },
+
+  });
+  </script>
+</dom-module>

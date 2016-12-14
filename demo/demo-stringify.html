@@ -1,0 +1,50 @@
+<link rel="import" href="../../polymer/polymer.html">
+<!--
+`polymerfire-lookup`
+polymerfire based util to construct lookup datastructure
+
+@demo demo/index.html 
+-->
+<dom-module id="demo-stringify">
+  <template>
+    <style>
+    :host {
+      display: block;
+    }
+    </style>
+    <div>
+      data: [[_data]]
+    </div>
+  </template>
+  <script>
+  Polymer({
+
+    is: 'demo-stringify',
+
+    properties: {
+     
+      /**
+       * The data to returned by firebase-query.
+       */
+      data: {
+        // type: Object
+        // notify: true
+      },
+
+      _data: {
+        // type: Object
+      }
+    },
+
+    observers: [
+      '_observeData(data.*)'
+    ],
+
+    _observeData: function() {
+      // console.info('DATA: ', this.data);
+      this.set('_data', JSON.stringify(this.data));
+    }
+
+  });
+  </script>
+</dom-module>
