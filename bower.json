@@ -1,7 +1,7 @@
 {
-  "name": "polymerfire-lookup",
+  "name": "firebase-nest",
   "description": "polymerfire based util to construct firebase lookup datastructure",
-  "main": "polymerfire-lookup.html",
+  "main": "firebase-nest.html",
   "dependencies": {
     "polymer": "Polymer/polymer#^1.4.0",
     "polymerfire": "firebase/polymerfire#^0.10.3"

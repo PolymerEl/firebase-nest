@@ -1,4 +1,4 @@
-# \<polymerfire-lookup\>
+# \<firebase-nest\>
 
 polymerfire based util to construct firebase lookup datastructure
 
