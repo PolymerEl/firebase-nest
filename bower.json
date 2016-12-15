@@ -1,7 +1,7 @@
 {
   "name": "firebase-nest",
   "description": "polymerfire based util to construct firebase lookup datastructure",
-  "main": "firebase-nest.html",
+  "main": "firebase-include.html",
   "authors": [
     "christophe geiser"
   ],
@@ -14,8 +14,7 @@
     "polymer",
     "firebase",
     "polymerfire",
-    "database",
-    "element-collection"
+    "database"
   ],
   "dependencies": {
     "polymer": "Polymer/polymer#^1.4.0",
