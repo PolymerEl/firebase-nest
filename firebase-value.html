@@ -1,10 +1,11 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../polymerfire/firebase-document.html">
+<link rel="import" href="../polymerfire/firebase-common-behavior.html">
 <!--
-`firebase-nest`
-polymerfire based util to construct lookup datastructure
+`firebase-value` is a wrapper around firebase-document, firing `firebase-value` when value is being retrieved.
 
 @demo demo/index.html 
+@event firebase-value
 -->
 <dom-module id="firebase-value">
   <template>
@@ -22,7 +23,7 @@ polymerfire based util to construct lookup datastructure
     is: 'firebase-value',
 
     behaviors: [
-      // Polymer.PolymerfireLookupQueyBehavior
+     Polymer.FirebaseCommonBehavior,
     ],
 
     properties: {

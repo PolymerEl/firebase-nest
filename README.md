@@ -9,14 +9,14 @@ polymerfire based util to construct firebase nested and lookup datastructure
 
 Example Usage:
 
-This example will add `{"code": {value of country code retrieved from firebase}}` to each array Element at `/countryList`
+This example first fetch all items under `/countryList`, and then add the `code` value lookup located at `/countryNames/[[item.$key]]/country-code`.
+
 ```html
 	<firebase-app  auth-domain="pre-ignition-meta.firebaseapp.com" database-url="https://pre-ignition-meta.firebaseio.com/" api-key="AIzaSyAbLJ5nMHaFS_YXioay8b28RnV43JvoEms">
   </firebase-app>
-  <firebase-nest id="nest" log path="/countryList" data="{{data}}">
+  <firebase-nest path="/countryList" data="{{data}}">
     <template is="dom-repeat" items="[[data]]">
-      <p>item: [[item.$key]]</p>
-      <firebase-value id="value" log key="code" data="[[item]]" path="/countryNames/[[item.$key]]/country-code"></firebase-value>
+      <firebase-value key="code" data="[[item]]" path="/countryNames/[[item.$key]]/country-code"></firebase-value>
     </template>
   </firebase-nest>
 
