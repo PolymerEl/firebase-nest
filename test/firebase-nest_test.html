@@ -1,41 +1,113 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
 
-    <title>firebase-nest test</title>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+  <title>firebase-nest test</title>
+  <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+  <script src="../../web-component-tester/browser.js"></script>
+  <!-- <script src="../../test-fixture/test-fixture-mocha.js"></script> -->
+  <link rel="import" href="../../polymerfire/firebase-app.html">
+  <link rel="import" href="test-value.html">
+  <link rel="import" href="../firebase-nest.html">
+  <link rel="import" href="../firebase-value.html">
+</head>
 
-    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
-    <script src="../../web-component-tester/browser.js"></script>
-
-    <link rel="import" href="../firebase-nest.html">
-    <link rel="import" href="../firebase-value.html">
-  </head>
-  <body>
-    <test-fixture id="nest">
-      <template>
-        <firebase-nest></firebase-nest>
+<body>
+  <test-fixture id="nest">
+    <template>
+      <firebase-nest></firebase-nest>
+    </template>
+  </test-fixture>
+  <test-fixture id="value">
+    <template>
+      <firebase-value data="{}"></firebase-value>
+    </template>
+  </test-fixture>
+  <!-- <test-fixture id="realistic"> -->
+      <template id="realistic" is="dom-bind">
+        <firebase-app  auth-domain="pre-ignition-meta.firebaseapp.com" database-url="https://pre-ignition-meta.firebaseio.com/" api-key="AIzaSyAbLJ5nMHaFS_YXioay8b28RnV43JvoEms">
+        </firebase-app>
+        <firebase-nest id="nest" log path="/countryList" data="{{data}}">
+          <template is="dom-repeat" items="[[data]]">
+            <p>item: [[item.$key]]</p>
+            <firebase-value id="value" log key="code" data="[[item]]" path="/countryNames/[[item.$key]]/country-code"></firebase-value>
+          </template>
+        </firebase-nest>
+        <test-value test="[[data.0]]"></test-value>
       </template>
-    </test-fixture>
+  <!-- </test-fixture> -->
 
-    <test-fixture id="value">
-      <template>
-        <firebase-value></firebase-value>
-      </template>
-    </test-fixture>
+  <script>
+  function waitForEvent(element, event) {
+    return new Promise(function(resolve, reject) {
+      element.addEventListener(event, function onEvent() {
+        window.clearTimeout(timeout);
+        element.removeEventListener(event, onEvent);
+        resolve();
+      });
 
-    <script>
-      suite('firebase-nest', function() {
-        test('instantiating firebaser-nest works', function() {
-          var element = fixture('nest');
-          assert.equal(element.is, 'firebase-nest');
+      var timeout = window.setTimeout(function() {
+        reject(new Error('Response took more than 8 seconds.'));
+      }, 8000);
+    });
+  }
+
+
+  suite('<firebase-nest>', function() {
+
+    suite('basic usage', function() {
+
+      test('instantiating firebaser-nest works', function() {
+        var element = fixture('nest');
+        assert.equal(element.is, 'firebase-nest');
+      });
+
+      test('instantiating firebaser-value works', function() {
+        var element = fixture('value');
+        assert.equal(element.is, 'firebase-value');
+      });
+    });
+
+    suite('realistic usage', function() {
+
+      setup(function() {
+
+        stub('firebase-nest', {
+         onFirebaseValue: function(e,d) {
+      
+          //hack to prevent the change to be reflected to firebase !
+          this.$.query.__syncingToMemory = true;
+          this.set('data.0.'+ d.key, 1);        
+          this.$.query.__syncingToMemory = false;
+          
+          this.fire('received-value', d);
+          // console.log('fireabse-nest received values');
+          }
         });
-        test('instantiating firebaser-value works', function() {
-          var element = fixture('value');
-          assert.equal(element.is, 'firebase-value');
+
+      });
+
+      teardown(function() {});
+
+      test('receives data from Firebase location', function(done) {
+        flush(function() {
+          var realistic = document.querySelector('#realistic');
+          var nest =  realistic.$.nest 
+          
+         waitForEvent(nest, 'received-value').then(function() {
+          expect(nest.data[0].code).to.be.equal(1);
+          done();
+        }).catch(function(e) {
+          done(e);
         });
       });
-    </script>
-  </body>
+      });
+    });
+
+  });
+  </script>
+</body>
+
 </html>
