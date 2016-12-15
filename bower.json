@@ -5,9 +5,9 @@
   "authors": [
     "christophe geiser"
   ],
-  "license":"https://github.com/PolymerEl/firebase-nest/LICENSE",
+  "license": "https://github.com/PolymerEl/firebase-nest/LICENSE",
   "repository": {
-    "url": "https://github.com/PolymerEl/firebase-nest",
+    "url": "https://github.com/PolymerEl/firebase-nest"
   },
   "keywords": [
     "web-components",
