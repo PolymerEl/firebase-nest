@@ -12,8 +12,10 @@
   "keywords": [
     "web-components",
     "polymer",
-    "fireabse",
+    "firebase",
     "polymerfire",
+    "database",
+    "element-collection"
   ],
   "dependencies": {
     "polymer": "Polymer/polymer#^1.4.0",
