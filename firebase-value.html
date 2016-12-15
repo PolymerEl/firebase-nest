@@ -1,0 +1,100 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../polymerfire/firebase-document.html">
+<!--
+`firebase-nest`
+polymerfire based util to construct lookup datastructure
+
+@demo demo/index.html 
+-->
+<dom-module id="firebase-value">
+  <template>
+    <style>
+    :host {
+      display: block;
+    }
+    </style>
+    <firebase-document log="[[log]]"  data="{{value}}" path="[[path]]" disabled="[[disabled]]" app-name="[[appName]]"></firebase-document>
+    <content></content>
+  </template>
+  <script>
+  Polymer({
+
+    is: 'firebase-value',
+
+    behaviors: [
+      // Polymer.PolymerfireLookupQueyBehavior
+    ],
+
+    properties: {
+      /**
+       * Path to a Firebase root or endpoint. N.B. `path` is case sensitive.
+       */ 
+      path: {
+        type: String 
+      },
+
+      /**
+       * The data to returned by firebase-document.
+       */
+      value: {
+        type: Object,
+        notify: true
+      },
+
+      /**
+       * When true, Firebase listeners won't be activated. This can be useful
+       * in situations where elements are loaded into the DOM before they're
+       * ready to be activated (e.g. navigation, initialization scenarios).
+       */
+      disabled: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * `key` the key to add to passed data
+       */
+      key: {
+        type: String,
+        value: 'lookup'
+      },
+
+      /**
+       * `data` root data that this element will augment
+       */
+      data: {
+        type: Object
+      },
+
+     /**
+       * When true, will perform detailed logging.
+       */
+      log: {
+        type: Boolean,
+        value: false
+      }
+
+    },
+
+    observers: [
+      'observeData(value, key, data)'
+    ],
+
+    attached: function(){
+      if (!this.data) {
+        this._error('fibebase-value need to be passed data');
+      }
+    },
+
+    observeData: function(value, key, data) {
+      // this.set('dataRoot.' + key, value);
+      this.fire('firebase-value', {
+        $key: data.$key,
+        key: key,
+        value: value
+      });
+    }
+
+  });
+  </script>
+</dom-module>

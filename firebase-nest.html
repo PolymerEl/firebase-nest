@@ -1,0 +1,95 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../polymerfire/firebase-query.html">
+<link rel="import" href="firebase-nest-behavior.html">
+<!--
+`firebase-nest`
+polymerfire based util to construct nested and lookup datastructure
+
+@demo demo/index.html 
+-->
+<dom-module id="firebase-nest">
+  <template>
+    <style>
+    :host {
+      display: block;
+    }
+    </style>
+    <firebase-query
+      id="query"
+      order-by-child="[[orderByChild]]"
+      order-by-value="[[orderByValue]]"
+      start-at="[[startAt]]"
+      end-at="[[endAt]]"
+      equal-to="[[equalTo]]"
+      limitTo-first="[[limitToFirst]]"
+      limitTo-last="[[limitToLast]]"
+      data="{{data}}"
+      disabled="[[disabled]]"
+      path="[[path]]" 
+      log="[[log]]" 
+      app-name="[[appName]]"
+      ></firebase-query>
+      <content></content>
+  </template>
+  <script>
+  Polymer({
+
+    is: 'firebase-nest',
+
+    behaviors: [
+      Polymer.FirebaseNestBehavior
+    ],
+
+    properties: {
+      /**
+       * Path to a Firebase root or endpoint. N.B. `path` is case sensitive.
+       */
+      path: {
+        type: String
+      },
+
+      /**
+       * The data to returned by firebase-query.
+       */
+      data: {
+        type: Object,
+        notify: true
+      },
+
+     /**
+       * When true, Firebase listeners won't be activated. This can be useful
+       * in situations where elements are loaded into the DOM before they're
+       * ready to be activated (e.g. navigation, initialization scenarios).
+       */
+      disabled: {
+        type: Boolean,
+        value: false
+      },
+
+     /**
+       * When true, will perform detailed logging.
+       */
+      log: {
+        type: Boolean,
+        value: false
+      }
+    },
+
+    listeners: {
+      'firebase-value': 'onFirebaseValue'
+    },
+
+    onFirebaseValue: function (e,d) {
+      e.stopPropagation();
+
+      var firebaseKey = d.$key,
+        index = this.data.findIndex(function(d) {return d.$key === firebaseKey;});
+      
+      //hack to prevent the change to be reflected to firebase !
+      this.$.query.__syncingToMemory = true;
+      this.set('data.' + index + '.'+ d.key, d.value);        
+      this.$.query.__syncingToMemory = false;
+    }
+  });
+  </script>
+</dom-module>
