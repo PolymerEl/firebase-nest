@@ -9,7 +9,6 @@
   <script src="../../web-component-tester/browser.js"></script>
   <!-- <script src="../../test-fixture/test-fixture-mocha.js"></script> -->
   <link rel="import" href="../../polymerfire/firebase-app.html">
-  <link rel="import" href="test-value.html">
   <link rel="import" href="../firebase-nest.html">
   <link rel="import" href="../firebase-value.html">
 </head>
@@ -35,7 +34,6 @@
             <firebase-value id="value" log key="code" data="[[item]]" path="/countryNames/[[item.$key]]/country-code"></firebase-value>
           </template>
         </firebase-nest>
-        <test-value test="[[data.0]]"></test-value>
       </template>
   <!-- </test-fixture> -->
 

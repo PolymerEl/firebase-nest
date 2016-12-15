@@ -1,38 +1,23 @@
+[![Build Status](https://travis-ci.org/PolymerEl/firebase-nest.svg?branch=master)](https://travis-ci.org/PolymerEl/firebase-nest)
+[![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg)](https://beta.webcomponents.org/element/polymerEl/firebase-nest)
+
 # \<firebase-nest\>
 
-polymerfire based util to construct firebase lookup datastructure
 
-## Install the Polymer-CLI
+polymerfire based util to construct firebase nested and lookup datastructure
 
-First, make sure you have the [Polymer CLI](https://www.npmjs.com/package/polymer-cli) installed. Then run `polymer serve` to serve your application locally.
 
-## Viewing Your Application
+Example Usage:
 
-```
-$ polymer serve
-```
-
-## Building Your Application
-
-```
-$ polymer build
-```
-
-This will create a `build/` folder with `bundled/` and `unbundled/` sub-folders
-containing a bundled (Vulcanized) and unbundled builds, both run through HTML,
-CSS, and JS optimizers.
-
-You can serve the built versions by giving `polymer serve` a folder to serve
-from:
+This example will add `{"code": {value of country code retrieved from firebase}}` to each array Element at `/countryList`
+```html
+	<firebase-app  auth-domain="pre-ignition-meta.firebaseapp.com" database-url="https://pre-ignition-meta.firebaseio.com/" api-key="AIzaSyAbLJ5nMHaFS_YXioay8b28RnV43JvoEms">
+  </firebase-app>
+  <firebase-nest id="nest" log path="/countryList" data="{{data}}">
+    <template is="dom-repeat" items="[[data]]">
+      <p>item: [[item.$key]]</p>
+      <firebase-value id="value" log key="code" data="[[item]]" path="/countryNames/[[item.$key]]/country-code"></firebase-value>
+    </template>
+  </firebase-nest>
 
 ```
-$ polymer serve build/bundled
-```
-
-## Running Tests
-
-```
-$ polymer test
-```
-
-Your application is already set up to be tested via [web-component-tester](https://github.com/Polymer/web-component-tester). Run `polymer test` to run your application's test suite locally.

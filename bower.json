@@ -2,9 +2,23 @@
   "name": "firebase-nest",
   "description": "polymerfire based util to construct firebase lookup datastructure",
   "main": "firebase-nest.html",
+  "authors": [
+    "christophe geiser"
+  ],
+  "license":"https://github.com/PolymerEl/firebase-nest/LICENSE",
+  "repository": {
+    "url": "https://github.com/PolymerEl/firebase-nest",
+  },
+  "keywords": [
+    "web-components",
+    "polymer",
+    "fireabse",
+    "polymerfire",
+  ],
   "dependencies": {
     "polymer": "Polymer/polymer#^1.4.0",
-    "polymerfire": "firebase/polymerfire#^0.10.3"
+    "polymerfire": "firebase/polymerfire#^0.10.3",
+    "app-storage": "polymerelements/app-storage#^0.9.0"
   },
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
