@@ -38,8 +38,8 @@
        * The data to returned by firebase-document.
        */
       value: {
-        type: Object,
-        notify: true
+        type: Object
+        // notify: true
       },
 
       /**
@@ -60,6 +60,11 @@
         value: 'lookup'
       },
 
+      keyArray: {
+        type: Array,
+        computed: '_splitKey(key)'
+      },
+
       /**
        * `data` root data that this element will augment
        */
@@ -78,7 +83,8 @@
     },
 
     observers: [
-      'observeData(value, key, data)'
+      'observeData(value, keyArray, data)',
+      'observeDataChange(value.*)'
     ],
 
     attached: function(){
@@ -86,14 +92,28 @@
         this._error('fibebase-value need to be passed data');
       }
     },
+    
+    observeDataChange: function(changed) {
+      if(this.data && this.keyArray) {
+       this.fire('firebase-value', {
+        $key: this.data.$key,
+        key: [this.keyArray].concat(changed.path.split('.').splice(1)),
+        value: changed.value
+      });
+     }
+    },
 
-    observeData: function(value, key, data) {
+    observeData: function(value, keyArray, data) {
       // this.set('dataRoot.' + key, value);
       this.fire('firebase-value', {
         $key: data.$key,
-        key: key,
+        key: keyArray,
         value: value
       });
+    },
+
+    _splitKey: function(key) {
+      return key.split('.');
     }
 
   });

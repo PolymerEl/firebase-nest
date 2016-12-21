@@ -14,22 +14,8 @@
       display: block;
     }
     </style>
-    <firebase-query
-      id="query"
-      order-by-child="[[orderByChild]]"
-      order-by-value="[[orderByValue]]"
-      start-at="[[startAt]]"
-      end-at="[[endAt]]"
-      equal-to="[[equalTo]]"
-      limitTo-first="[[limitToFirst]]"
-      limitTo-last="[[limitToLast]]"
-      data="{{data}}"
-      disabled="[[disabled]]"
-      path="[[path]]" 
-      log="[[log]]" 
-      app-name="[[appName]]"
-      ></firebase-query>
-      <content></content>
+    <firebase-query id="query" order-by-child="[[orderByChild]]" order-by-value="[[orderByValue]]" start-at="[[startAt]]" end-at="[[endAt]]" equal-to="[[equalTo]]" limitTo-first="[[limitToFirst]]" limitTo-last="[[limitToLast]]" data="{{data}}" disabled="[[disabled]]" path="[[path]]" log="[[log]]" app-name="[[appName]]"></firebase-query>
+    <content></content>
   </template>
   <script>
   Polymer({
@@ -52,11 +38,17 @@
        * The data to returned by firebase-query.
        */
       data: {
+        type: Array,
+        notify: true
+      },
+
+
+      dataAsObject: {
         type: Object,
         notify: true
       },
 
-     /**
+      /**
        * When true, Firebase listeners won't be activated. This can be useful
        * in situations where elements are loaded into the DOM before they're
        * ready to be activated (e.g. navigation, initialization scenarios).
@@ -66,7 +58,7 @@
         value: false
       },
 
-     /**
+      /**
        * When true, will perform detailed logging.
        */
       log: {
@@ -75,20 +67,44 @@
       }
     },
 
+    observers: [
+     '_computeDataAsObject(data.splices)'
+    ],
+
     listeners: {
       'firebase-value': 'onFirebaseValue'
     },
 
-    onFirebaseValue: function (e,d) {
+    onFirebaseValue: function(e, d) {
       e.stopPropagation();
 
       var firebaseKey = d.$key,
-        index = this.data.findIndex(function(d) {return d.$key === firebaseKey;});
-      
+        index = this.data.findIndex(function(d) {
+          return d.$key === firebaseKey;
+        });
+
       //hack to prevent the change to be reflected to firebase !
       this.$.query.__syncingToMemory = true;
-      this.set('data.' + index + '.'+ d.key, d.value);        
+      this.set(['data', index].concat(d.key), d.value);
       this.$.query.__syncingToMemory = false;
+      this.fire('firebase-nest', d);
+    },
+
+    _computeDataAsObject: function(splices) {
+      if (splices && splices.indexSplices) {
+        splices.indexSplices.forEach(function(s) {
+          s.removed.forEach(function(removed) {
+            //work around this.delete not implemented https://github.com/Polymer/polymer/issues/2565
+            delete(this.dataAsObject[removed.$key]);
+            this.notifyPath('dataAsObject.' + removed.$key);
+          });
+          for (var i = 0; i < s.addedCount; i++) {
+            var index = s.index + i;
+            var obj = s.object[index];
+            this.set('dataAsObject.' + obj.$key, obj);
+          }
+        }, this);
+      }
     }
   });
   </script>
