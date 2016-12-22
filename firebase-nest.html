@@ -86,8 +86,14 @@
       //hack to prevent the change to be reflected to firebase !
       this.$.query.__syncingToMemory = true;
       this.set(['data', index].concat(d.key), d.value);
+      // this.notifyPath(['data', index]);
       this.$.query.__syncingToMemory = false;
-      this.fire('firebase-nest', d);
+      // we might need to refresh some stuff based on this;
+      // console.info('NEST', d);
+      this.debounce('firebase-nest-refresh', function(){
+        // console.info('FIRE NEST', d);
+        this.fire('firebase-nest-refresh'); 
+      }, 400);
     },
 
     _computeDataAsObject: function(splices) {

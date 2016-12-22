@@ -97,7 +97,7 @@
       if(this.data && this.keyArray) {
        this.fire('firebase-value', {
         $key: this.data.$key,
-        key: [this.keyArray].concat(changed.path.split('.').splice(1)),
+        key: this.keyArray.concat(changed.path.split('.').splice(1)),
         value: changed.value
       });
      }
