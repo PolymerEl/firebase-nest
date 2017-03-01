@@ -9,13 +9,7 @@
 -->
 <dom-module id="firebase-value">
   <template>
-    <style>
-    :host {
-      display: block;
-    }
-    </style>
-    <firebase-document log="[[log]]"  data="{{value}}" path="[[path]]" disabled="[[disabled]]" app-name="[[appName]]"></firebase-document>
-    <content></content>
+    <firebase-document log="[[log]]" exists="{{exists}}" data="{{value}}" path="[[path]]" disabled="[[disabled]]" app-name="[[appName]]"></firebase-document>
   </template>
   <script>
   Polymer({
@@ -78,13 +72,34 @@
       log: {
         type: Boolean,
         value: false
-      }
+      },
+
+
+      /**
+       * `exists` notify us when we have data
+       */
+      exists: {
+        type: Boolean
+        // observer: '_observeExists'
+      },
+
+      defaultValue: {
+
+      },
+
+      // _cacheChange: {
+      //   type: Object,
+      //   value: function() {
+      //     return {};
+      //   }
+
+      // },
 
     },
 
     observers: [
-      'observeData(value, keyArray, data)',
-      'observeDataChange(value.*)'
+      // 'observeData(value, keyArray, data)',
+      'observeDataChange(value.*, exists, keyArray, data)'
     ],
 
     attached: function(){
@@ -92,29 +107,82 @@
         this._error('fibebase-value need to be passed data');
       }
     },
+
+    _observeExists: function(exists) {
+      if(exists === false && this.defaultValue !== undefined) {
+        this.value = this.defaultValue;
+      }
+    },
+
+    getValue: function(value) {
+      
+      return (this.exists === true ) ? value : this.defaultValue !== undefined ? this.defaultValue : value;
+    },
     
-    observeDataChange: function(changed) {
+
+    observeDataChange: function(changed, exists, keyArray, data) {
+
+      // we only update sub-properties
+      // if(exists === true) {}
       if(this.data && this.keyArray) {
-       this.fire('firebase-value', {
+        // this._cacheChange[changed.path] = changed;
+        // this.debounce('firebase-value-observe-data-change', this._processCache, 25);
+      // }
+        this.fire('firebase-value', {
         $key: this.data.$key,
         key: this.keyArray.concat(changed.path.split('.').splice(1)),
-        value: changed.value
+        value: this.getValue(changed.value)
       });
-     }
+      }
+       
+      // if(exists && this.log) {
+      //   console.timeEnd(changed.path)
+      // }
     },
-
-    observeData: function(value, keyArray, data) {
-      // this.set('dataRoot.' + key, value);
-      this.fire('firebase-value', {
-        $key: data.$key,
-        key: keyArray,
-        value: value
-      });
-    },
-
+    
     _splitKey: function(key) {
       return key.split('.');
     }
+    // _processCache: function() {
+    //   var me = this;
+    //   var cache = this._cacheChange;
+      
+    //   if(cache.value) {
+    //     me.fire('firebase-value', {
+    //       $key: this.data.$key,
+    //       key: this.keyArray,
+    //       value: this.getValue(this.value)
+    //     });         
+    //     this._cacheChange = {};
+    //     return;
+    //   }
+
+    //   var obj;
+
+
+    //   Object.keys(cache).forEach(function(path) {
+    //     obj = cache[path];
+
+    //      me.fire('firebase-value', {
+    //       $key: me.data.$key,
+    //       key: me.keyArray.concat(path.split('.').splice(1)),
+    //       value: me.getValue(obj.value)
+    //     }); 
+
+    //     delete cache[path];
+    //   });
+    
+    // },
+
+    // observeData: function(value, keyArray, data) {
+    //   // this.set('dataRoot.' + key, value);
+    //   this.fire('firebase-value', {
+    //     $key: data.$key,
+    //     key: keyArray,
+    //     value: this.getValue(value)
+    //   });
+    // },
+
 
   });
   </script>

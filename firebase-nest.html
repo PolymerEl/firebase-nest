@@ -9,12 +9,7 @@
 -->
 <dom-module id="firebase-nest">
   <template>
-    <style>
-    :host {
-      display: block;
-    }
-    </style>
-    <firebase-query id="query" order-by-child="[[orderByChild]]" order-by-value="[[orderByValue]]" start-at="[[startAt]]" end-at="[[endAt]]" equal-to="[[equalTo]]" limitTo-first="[[limitToFirst]]" limitTo-last="[[limitToLast]]" data="{{data}}" disabled="[[disabled]]" path="[[path]]" log="[[log]]" app-name="[[appName]]"></firebase-query>
+    <firebase-query log="[[log]]" size="{{size}}" id="query" order-by-child="[[orderByChild]]" order-by-value="[[orderByValue]]" start-at="[[startAt]]" end-at="[[endAt]]" equal-to="[[equalTo]]" limit-to-first="[[limitToFirst]]" limit-to-last="[[limitToLast]]" data="{{data}}" disabled="[[disabled]]" path="[[path]]" log="[[log]]" app-name="[[appName]]"></firebase-query>
     <content></content>
   </template>
   <script>
@@ -42,11 +37,26 @@
         notify: true
       },
 
-
-      dataAsObject: {
-        type: Object,
-        notify: true
+      dataSource: {
+        notify: true,
+        value: function() {
+          return this._dataSource.bind(this);
+        }
       },
+
+      // dataSourceSize: {
+      //   type: Number,
+      //   notify: true,
+      //   value: 50
+      // },
+
+      /**
+       * `dataSourceDelay` the delay to wait before calling dataSource callback - it should give some time to fetch firebase data
+       */
+      dataSourceDelay: {
+        type: Number,
+        value: 500
+      },  
 
       /**
        * When true, Firebase listeners won't be activated. This can be useful
@@ -64,11 +74,26 @@
       log: {
         type: Boolean,
         value: false
-      }
+      },
+
+       /**
+       * `size` reflect data.length
+       */
+      size: {
+        type: Number,
+        notify: true
+      },
+      /**
+       * `_useDataSource`  a flag to know if we are usingData source - that helps dealing with reflecting data-source changes
+       */
+      // useDataSource: {
+      //   type: Boolean,
+      //   readOnly: true
+      // }
     },
 
     observers: [
-     '_computeDataAsObject(data.splices)'
+      // '_computeDataAsObject(data.splices)'
     ],
 
     listeners: {
@@ -88,30 +113,47 @@
       this.set(['data', index].concat(d.key), d.value);
       // this.notifyPath(['data', index]);
       this.$.query.__syncingToMemory = false;
+
+      // if(this._useDataSource) {
+      //   this.fire('firebase-item-changed', {
+      //     item: this.data[index],
+
+      //   })
+      // }
       // we might need to refresh some stuff based on this;
       // console.info('NEST', d);
-      this.debounce('firebase-nest-refresh', function(){
+      this.debounce('firebase-nest-refresh', function() {
         // console.info('FIRE NEST', d);
-        this.fire('firebase-nest-refresh'); 
-      }, 400);
+        // console.timeStamp('nest');
+        this.fire('firebase-nest-refresh', this.data);
+      }, 200);
     },
 
-    _computeDataAsObject: function(splices) {
-      if (splices && splices.indexSplices) {
-        splices.indexSplices.forEach(function(s) {
-          s.removed.forEach(function(removed) {
-            //work around this.delete not implemented https://github.com/Polymer/polymer/issues/2565
-            delete(this.dataAsObject[removed.$key]);
-            this.notifyPath('dataAsObject.' + removed.$key);
-          });
-          for (var i = 0; i < s.addedCount; i++) {
-            var index = s.index + i;
-            var obj = s.object[index];
-            this.set('dataAsObject.' + obj.$key, obj);
-          }
-        }, this);
-      }
+    _dataSource: function(opts, cb) {
+      var data = this.data;
+      this.debounce('firebase-nest-dataSource', function() {
+        
+        var start = opts.pageSize * opts.page ;
+        cb(data.slice(start, start + opts.pageSize));
+      }, this.dataSourceDelay);
     }
+
+    // _computeDataAsObject: function(splices) {
+    //   if (splices && splices.indexSplices) {
+    //     splices.indexSplices.forEach(function(s) {
+    //       s.removed.forEach(function(removed) {
+    //         //work around this.delete not implemented https://github.com/Polymer/polymer/issues/2565
+    //         delete(this.dataAsObject[removed.$key]);
+    //         this.notifyPath('dataAsObject.' + removed.$key);
+    //       });
+    //       for (var i = 0; i < s.addedCount; i++) {
+    //         var index = s.index + i;
+    //         var obj = s.object[index];
+    //         this.set('dataAsObject.' + obj.$key, obj);
+    //       }
+    //     }, this);
+    // }
+    // }
   });
   </script>
 </dom-module>
