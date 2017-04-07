@@ -1,0 +1,56 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../polymerfire/firebase-document.html">
+<!--
+getting lookup data from firebase paths
+-->
+<dom-module id="firebase-nest-lookup-set">
+  <template>
+    <firebase-document app-name="[[appName]]" exists="{{exists}}" path="[[path]]" data="{{data}}"></firebase-document>
+  </template>
+  <script>
+  Polymer({
+    is: 'firebase-nest-lookup-set',
+
+    properties: {
+      /* 
+       * `data`  the data key-value Object containing all values
+       */
+      data: {
+        type: Object
+      },
+
+      /* 
+       * `lookupData`  the data to augment
+       */
+      lookupData: {
+        type: Object,
+        notifies: true
+
+      },
+
+      /* 
+       * `path`  firebase path
+       */
+      path: {
+        type: String
+      },
+
+      /* 
+       * `appName`  firebase application name
+       */
+      appName: {
+        type: String
+      }
+    },
+    observers: [
+      '_observeLookupData(data,data.*, exists)'
+    ],
+
+    _observeLookupData: function(data, changed, exists) {
+      if (exists) {
+        this.set('lookupData.' + this.path, this.data);
+      }
+    }
+  });
+  </script>
+</dom-module>

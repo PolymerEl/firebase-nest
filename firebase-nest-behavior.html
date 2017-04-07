@@ -9,11 +9,12 @@ https://github.com/firebase/polymerfire/blob/master/LICENSE
 <link rel="import" href="../polymerfire/firebase-common-behavior.html">
 <!-- <link rel="import" href="firebase-app-script.html"> -->
 <script>
-(function() {
   'use strict';
 
   /** @polymerBehavior Polymer.PolymerfireLookupQueyBehavior */
-  Polymer.FirebaseNestBehaviorImpl = {
+  window.Polymer = window.Polymer || {};
+  Polymer.firebaseNest = Polymer.firebaseNest || {};
+  Polymer.firebaseNest.NestBehaviorImpl = {
     properties: {
       /**
        * The child key of each query result to order the query by.
@@ -24,8 +25,8 @@ https://github.com/firebase/polymerfire/blob/master/LICENSE
       orderByChild: {
         type: String,
         value: ''
-      }, 
-  
+      },
+
       /**
        * Order this query by values. This is only applicable to leaf node queries
        * against data structures such as `{a: 1, b: 2, c: 3}`.
@@ -45,7 +46,7 @@ https://github.com/firebase/polymerfire/blob/master/LICENSE
       startAt: {
         type: String,
         value: ''
-      },  
+      },
 
       /**
        * The value to end at in the query.
@@ -57,7 +58,7 @@ https://github.com/firebase/polymerfire/blob/master/LICENSE
       endAt: {
         type: String,
         value: ''
-      }, 
+      },
 
       /**
        * Specifies a child-key value that must be matched for each candidate result.
@@ -96,9 +97,8 @@ https://github.com/firebase/polymerfire/blob/master/LICENSE
   };
 
   /** @polymerBehavior */
-  Polymer.FirebaseNestBehavior = [
-    Polymer.FirebaseCommonBehavior,
-    Polymer.FirebaseNestBehaviorImpl
+  Polymer.firebaseNest.NestBehavior = [
+     Polymer.FirebaseCommonBehavior,
+     Polymer.firebaseNest.NestBehaviorImpl
   ];
-})();
 </script>

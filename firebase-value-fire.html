@@ -1,0 +1,72 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../polymerfire/firebase-document.html">
+<link rel="import" href="../polymerfire/firebase-common-behavior.html">
+<link rel="import" href="firebase-value-behavior.html">
+<!--
+`firebase-value` is a wrapper around firebase-document, firing `firebase-value` when value is being retrieved.
+
+@demo demo/index.html 
+@event firebase-value
+-->
+<dom-module id="firebase-value-fire">
+  <template>
+    <firebase-document log="[[log]]" exists="{{exists}}" data="{{value}}" path="[[path]]" disabled="[[disabled]]" app-name="[[appName]]"></firebase-document>
+  </template>
+  <script>
+  Polymer({
+
+    is: 'firebase-value-fire',
+
+    behaviors: [
+      Polymer.firebaseNest.ValueBehavior
+    ],
+
+    properties: {
+
+      /**
+       * The data to returned by firebase-document.
+       */
+      value: {
+        type: Object
+          // notify: true
+      },
+
+      keyArray: {
+        type: Array,
+        computed: '_splitKey(key)'
+      }
+
+    },
+
+    observers: [
+      // 'observeData(value, keyArray, data)',
+      'observeDataChange(value.*, exists, keyArray, data)'
+    ],
+
+    getValue: function(value) {
+      return (this.exists === true) ? value : this.defaultValue !== undefined ? this.defaultValue : value;
+    },
+
+    observeDataChange: function(changed, exists, keyArray, data) {
+
+      // we only update sub-properties
+      // if(exists === true) {}
+      if (this.data && this.keyArray) {
+        // this._cacheChange[changed.path] = changed;
+        // this.debounce('firebase-value-observe-data-change', this._processCache, 25);
+        // }
+        this.fire('firebase-value', {
+          $key: this.data.$key,
+          key: this.keyArray.concat(changed.path.split('.').splice(1)),
+          value: this.getValue(changed.value)
+        });
+      }
+    },
+
+    _splitKey: function(key) {
+        return key.split('.');
+      }
+
+  });
+  </script>
+</dom-module>

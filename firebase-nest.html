@@ -18,7 +18,7 @@
     is: 'firebase-nest',
 
     behaviors: [
-      Polymer.FirebaseNestBehavior
+      Polymer.firebaseNest.NestBehavior
     ],
 
     properties: {
@@ -36,6 +36,10 @@
         type: Array,
         notify: true
       },
+
+      // _data: {
+      //   type: Array,
+      // },
 
       dataSource: {
         notify: true,
@@ -55,8 +59,8 @@
        */
       dataSourceDelay: {
         type: Number,
-        value: 500
-      },  
+        value: 200
+      },
 
       /**
        * When true, Firebase listeners won't be activated. This can be useful
@@ -76,13 +80,22 @@
         value: false
       },
 
-       /**
-       * `size` reflect data.length
+      /**
+       * `size` reflect data.length. Size is debounced in firebase-query
        */
       size: {
         type: Number,
         notify: true
       },
+
+      /* 
+       * `allowSync`  set to true to make sure we sync with firebase. It HAS to be set to true if we are using two-way binding with dom-repeat ...
+       */
+      allowSync: {
+        type: Boolean,
+        // observer: '_observeAllowSync',
+        value: false
+      }
       /**
        * `_useDataSource`  a flag to know if we are usingData source - that helps dealing with reflecting data-source changes
        */
@@ -94,10 +107,45 @@
 
     observers: [
       // '_computeDataAsObject(data.splices)'
+      // '_observeDataMutation(_data.*)'
+      // '_observeData(data)'
     ],
+
+    // _observeData: function(data) {
+    //   this.set('data', data)
+    // },
+
+    // _observeDataMutation(changed) {
+    //   this.set('data', data)
+    // },
+
+    // _observeData: function(changed) {
+    //   console.info('DATACHANGED', changed);
+    // },
 
     listeners: {
       'firebase-value': 'onFirebaseValue'
+    },
+
+    /* 
+     * `_observePath` we need to reset the data if sync is not allowed 
+     */
+    // _observePath: function(path) {
+    //   if(!this.allowSync) {
+    //     this.$.query.data = this.$.query.zeroValue;  
+    //   }
+    // },
+
+    // _observeAllowSync: function(allow) {
+    //   this.$.query.__syncingToMemory = !allow;
+    // },
+
+    attached: function() {
+      //we Highjack the behavior of firebase-query and prevent data to be written back to the db. If need be, we could go back to standard behavior depending on allowSync
+      // console.info('CREATE NEST');
+      this.$.query.__dataChanged = function() {
+        // console.info('NEST CHANGE');
+      };
     },
 
     onFirebaseValue: function(e, d) {
@@ -130,12 +178,65 @@
     },
 
     _dataSource: function(opts, cb) {
-      var data = this.data;
-      this.debounce('firebase-nest-dataSource', function() {
-        
-        var start = opts.pageSize * opts.page ;
-        cb(data.slice(start, start + opts.pageSize));
-      }, this.dataSourceDelay);
+      var items = this.data;
+      if (opts.filters.length) {
+        items = this._filter(items, opts.filters);
+      }
+      this.size = items.length;
+
+      if (opts.sortOrder.length) {
+        items = this._sort(items, opts.sortOrder);
+      }
+
+      var start = opts.page * opts.pageSize;
+      var end = start + opts.pageSize;
+      var slice = items.slice(start, end);
+      cb(slice, items.length);
+    },
+
+    _sort: function(items, sorters) {
+        this._sorters = sorters;
+        return items.sort(this._multiSort.bind(this));
+
+    },
+
+    _multiSort: function(a, b) {
+      return this._sorters.map(function(sort) {
+        if (sort.direction === 'asc') {
+          return this._compare(Polymer.Base.get(sort.path, a), Polymer.Base.get(sort.path, b));
+        } else if (sort.direction === 'desc') {
+          return this._compare(Polymer.Base.get(sort.path, b), Polymer.Base.get(sort.path, a));
+        }
+        return 0;
+      }, this).reduce(function firstNonZeroValue(p, n) {
+        return p ? p : n;
+      }, 0);
+    },
+
+    _normalizeEmptyValue: function(value) {
+      return [undefined, null].indexOf(value) >= 0 ? '' : value.toString();
+    },
+
+    _compare: function(a, b) {
+      a = this._normalizeEmptyValue(a);
+      b = this._normalizeEmptyValue(b);
+
+      if (a < b) {
+        return -1;
+      }
+      if (a > b) {
+        return 1;
+      }
+      return 0;
+    },
+
+    _filter: function(items, filters) {
+      return items.filter(function(item, index) {
+        return filters.filter(function(filter) {
+          var value = this._normalizeEmptyValue(Polymer.Base.get(filter.path, item));
+          return value.toLowerCase().indexOf(filter.value.toString().toLowerCase()) === -1;
+        }.bind(this)).length === 0;
+      }, this);
     }
 
     // _computeDataAsObject: function(splices) {

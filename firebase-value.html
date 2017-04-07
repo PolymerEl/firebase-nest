@@ -1,6 +1,7 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../polymerfire/firebase-document.html">
 <link rel="import" href="../polymerfire/firebase-common-behavior.html">
+<link rel="import" href="firebase-value-behavior.html">
 <!--
 `firebase-value` is a wrapper around firebase-document, firing `firebase-value` when value is being retrieved.
 
@@ -17,173 +18,69 @@
     is: 'firebase-value',
 
     behaviors: [
-     Polymer.FirebaseCommonBehavior,
+      Polymer.firebaseNest.ValueBehavior
     ],
 
     properties: {
-      /**
-       * Path to a Firebase root or endpoint. N.B. `path` is case sensitive.
-       */ 
+
       path: {
-        type: String 
+        type: String,
+        reflectToAttribute: true
       },
 
       /**
        * The data to returned by firebase-document.
        */
       value: {
-        type: Object
-        // notify: true
-      },
-
-      /**
-       * When true, Firebase listeners won't be activated. This can be useful
-       * in situations where elements are loaded into the DOM before they're
-       * ready to be activated (e.g. navigation, initialization scenarios).
-       */
-      disabled: {
-        type: Boolean,
-        value: false
-      },
-
-      /**
-       * `key` the key to add to passed data
-       */
-      key: {
-        type: String,
-        value: 'lookup'
-      },
-
-      keyArray: {
-        type: Array,
-        computed: '_splitKey(key)'
+        type: Object,
+        notify: true
       },
 
       /**
        * `data` root data that this element will augment
        */
       data: {
-        type: Object
+        type: Object,
+        notify: true
       },
-
-     /**
-       * When true, will perform detailed logging.
-       */
-      log: {
-        type: Boolean,
-        value: false
-      },
-
-
-      /**
-       * `exists` notify us when we have data
-       */
-      exists: {
-        type: Boolean
-        // observer: '_observeExists'
-      },
-
-      defaultValue: {
-
-      },
-
-      // _cacheChange: {
-      //   type: Object,
-      //   value: function() {
-      //     return {};
-      //   }
-
-      // },
 
     },
 
     observers: [
       // 'observeData(value, keyArray, data)',
-      'observeDataChange(value.*, exists, keyArray, data)'
+      // '_observeValueChangeSimple(value)',
+      '_observeValueChange(data, value.*)',
+      '_observeExistsChange(data, exists)'
     ],
 
-    attached: function(){
-      if (!this.data) {
-        this._error('fibebase-value need to be passed data');
+    // getValue: function(value) {
+    //   return (this.exists === true ||  this.defaultValue === undefined) ? value : this.defaultValue;
+    // },
+
+    _observeExistsChange: function(data, exists) {
+      // console.info('CHANGED EXISTS 0', exists, this.key, this.value);
+      if (exists === true) {
+        // console.info('CHANGED EXISTS 1', this.key, this.value);
+        return this.set('data.' + this.key, this.value);
+      }
+      if (exists === false && this.defaultValue) {
+        return this.set('data.' + this.key, this.defaultValue);
+
       }
     },
 
-    _observeExists: function(exists) {
-      if(exists === false && this.defaultValue !== undefined) {
-        this.value = this.defaultValue;
+    // _observeValueChangeSimple: function(value) {
+    //   console.info('CHANGED SIMPLE', value);
+    // },
+
+    _observeValueChange: function(data,changed) {
+      // console.info('CHANGED 0', changed, this.value);
+      if (this.exists) {
+        // console.info('CHANGED 1', 'data.' + [this.key].concat(changed.path.split('.').splice(1)).join('.'), changed, changed.value);
+        this.set('data.' + [this.key].concat(changed.path.split('.').splice(1)).join('.'), changed.value);
+
       }
-    },
-
-    getValue: function(value) {
-      
-      return (this.exists === true ) ? value : this.defaultValue !== undefined ? this.defaultValue : value;
-    },
-    
-
-    observeDataChange: function(changed, exists, keyArray, data) {
-
-      // we only update sub-properties
-      // if(exists === true) {}
-      if(this.data && this.keyArray) {
-        // this._cacheChange[changed.path] = changed;
-        // this.debounce('firebase-value-observe-data-change', this._processCache, 25);
-      // }
-        this.fire('firebase-value', {
-        $key: this.data.$key,
-        key: this.keyArray.concat(changed.path.split('.').splice(1)),
-        value: this.getValue(changed.value)
-      });
-      }
-       
-      // if(exists && this.log) {
-      //   console.timeEnd(changed.path)
-      // }
-    },
-    
-    _splitKey: function(key) {
-      return key.split('.');
     }
-    // _processCache: function() {
-    //   var me = this;
-    //   var cache = this._cacheChange;
-      
-    //   if(cache.value) {
-    //     me.fire('firebase-value', {
-    //       $key: this.data.$key,
-    //       key: this.keyArray,
-    //       value: this.getValue(this.value)
-    //     });         
-    //     this._cacheChange = {};
-    //     return;
-    //   }
-
-    //   var obj;
-
-
-    //   Object.keys(cache).forEach(function(path) {
-    //     obj = cache[path];
-
-    //      me.fire('firebase-value', {
-    //       $key: me.data.$key,
-    //       key: me.keyArray.concat(path.split('.').splice(1)),
-    //       value: me.getValue(obj.value)
-    //     }); 
-
-    //     delete cache[path];
-    //   });
-    
-    // },
-
-    // observeData: function(value, keyArray, data) {
-    //   // this.set('dataRoot.' + key, value);
-    //   this.fire('firebase-value', {
-    //     $key: data.$key,
-    //     key: keyArray,
-    //     value: this.getValue(value)
-    //   });
-    // },
-
-
   });
   </script>
 </dom-module>
