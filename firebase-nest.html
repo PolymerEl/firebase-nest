@@ -1,6 +1,6 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../polymerfire/firebase-query.html">
-<link rel="import" href="firebase-nest-behavior.html">
+<link rel="import" href="../polymerfire/firebase-common-behavior.html">
 <!--
 `firebase-nest` is a wrapper element around firebase-query and designed to work well with `firebase-value`.
 
@@ -9,7 +9,7 @@
 -->
 <dom-module id="firebase-nest">
   <template>
-    <firebase-query log="[[log]]" size="{{size}}" id="query" order-by-child="[[orderByChild]]" order-by-value="[[orderByValue]]" start-at="[[startAt]]" end-at="[[endAt]]" equal-to="[[equalTo]]" limit-to-first="[[limitToFirst]]" limit-to-last="[[limitToLast]]" data="{{data}}" disabled="[[disabled]]" path="[[path]]" log="[[log]]" app-name="[[appName]]"></firebase-query>
+    <firebase-query id="query" log="[[log]]" size="{{size}}" order-by-child="[[orderByChild]]" order-by-value="[[orderByValue]]" start-at="[[startAt]]" end-at="[[endAt]]" equal-to="[[equalTo]]" limit-to-first="[[limitToFirst]]" limit-to-last="[[limitToLast]]" data="{{data}}" disabled="[[disabled]]" path="[[path]]" log="[[log]]" app="[[app]]" app-name="[[appName]]"></firebase-query>
     <content></content>
   </template>
   <script>
@@ -18,10 +18,11 @@
     is: 'firebase-nest',
 
     behaviors: [
-      Polymer.firebaseNest.NestBehavior
+      Polymer.FirebaseCommonBehavior
     ],
 
     properties: {
+
       /**
        * Path to a Firebase root or endpoint. N.B. `path` is case sensitive.
        */
@@ -37,29 +38,18 @@
         notify: true
       },
 
-      // _data: {
-      //   type: Array,
-      // },
-
+      /* 
+       * `dataSource`  Function that provides items lazily. Receives arguments params, callback
+       *     params.page Requested page index
+       *     params.pageSize Current page size
+       *     params.filters Currently applied filters
+       *     params.sortOrders Currently applied sorting orders
+       */
       dataSource: {
         notify: true,
         value: function() {
           return this._dataSource.bind(this);
         }
-      },
-
-      // dataSourceSize: {
-      //   type: Number,
-      //   notify: true,
-      //   value: 50
-      // },
-
-      /**
-       * `dataSourceDelay` the delay to wait before calling dataSource callback - it should give some time to fetch firebase data
-       */
-      dataSourceDelay: {
-        type: Number,
-        value: 200
       },
 
       /**
@@ -91,90 +81,97 @@
       /* 
        * `allowSync`  set to true to make sure we sync with firebase. It HAS to be set to true if we are using two-way binding with dom-repeat ...
        */
-      allowSync: {
-        type: Boolean,
-        // observer: '_observeAllowSync',
-        value: false
-      }
-      /**
-       * `_useDataSource`  a flag to know if we are usingData source - that helps dealing with reflecting data-source changes
-       */
-      // useDataSource: {
+      // allowSync: {
       //   type: Boolean,
-      //   readOnly: true
-      // }
+      //   value: false
+      // },
+
+      /**
+       * The child key of each query result to order the query by.
+       *
+       * Changing this value generates a new `query` ordered by the
+       * specified child key.
+       */
+      orderByChild: {
+        type: String,
+        value: ''
+      },
+
+      /**
+       * Order this query by values. This is only applicable to leaf node queries
+       * against data structures such as `{a: 1, b: 2, c: 3}`.
+       */
+      orderByValue: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * The value to start at in the query.
+       *
+       * Changing this value generates a new `query` with the specified
+       * starting point. The generated `query` includes children which match
+       * the specified starting point.
+       */
+      startAt: {
+        type: String,
+        value: ''
+      },
+
+      /**
+       * The value to end at in the query.
+       *
+       * Changing this value generates a new `query` with the specified
+       * ending point. The generated `query` includes children which match
+       * the specified ending point.
+       */
+      endAt: {
+        type: String,
+        value: ''
+      },
+
+      /**
+       * Specifies a child-key value that must be matched for each candidate result.
+       *
+       * Changing this value generates a new `query` which includes children
+       * which match the specified value.
+       */
+      equalTo: {
+        type: Object,
+        value: null
+      },
+
+      /**
+       * The maximum number of nodes to include in the query.
+       *
+       * Changing this value generates a new `query` limited to the first
+       * number of children.
+       */
+      limitToFirst: {
+        type: Number,
+        value: 0
+      },
+
+      /**
+       * The maximum number of nodes to include in the query.
+       *
+       * Changing this value generates a new `query` limited to the last
+       * number of children.
+       */
+      limitToLast: {
+        type: Number,
+        value: 0
+      }
     },
-
-    observers: [
-      // '_computeDataAsObject(data.splices)'
-      // '_observeDataMutation(_data.*)'
-      // '_observeData(data)'
-    ],
-
-    // _observeData: function(data) {
-    //   this.set('data', data)
-    // },
-
-    // _observeDataMutation(changed) {
-    //   this.set('data', data)
-    // },
-
-    // _observeData: function(changed) {
-    //   console.info('DATACHANGED', changed);
-    // },
 
     listeners: {
-      'firebase-value': 'onFirebaseValue'
+      // 'firebase-value': 'onFirebaseValue'
     },
-
-    /* 
-     * `_observePath` we need to reset the data if sync is not allowed 
-     */
-    // _observePath: function(path) {
-    //   if(!this.allowSync) {
-    //     this.$.query.data = this.$.query.zeroValue;  
-    //   }
-    // },
-
-    // _observeAllowSync: function(allow) {
-    //   this.$.query.__syncingToMemory = !allow;
-    // },
 
     attached: function() {
+      // IMPORTANT !
       //we Highjack the behavior of firebase-query and prevent data to be written back to the db. If need be, we could go back to standard behavior depending on allowSync
-      // console.info('CREATE NEST');
-      this.$.query.__dataChanged = function() {
-        // console.info('NEST CHANGE');
-      };
-    },
-
-    onFirebaseValue: function(e, d) {
-      e.stopPropagation();
-
-      var firebaseKey = d.$key,
-        index = this.data.findIndex(function(d) {
-          return d.$key === firebaseKey;
-        });
-
-      //hack to prevent the change to be reflected to firebase !
-      this.$.query.__syncingToMemory = true;
-      this.set(['data', index].concat(d.key), d.value);
-      // this.notifyPath(['data', index]);
-      this.$.query.__syncingToMemory = false;
-
-      // if(this._useDataSource) {
-      //   this.fire('firebase-item-changed', {
-      //     item: this.data[index],
-
-      //   })
-      // }
-      // we might need to refresh some stuff based on this;
-      // console.info('NEST', d);
-      this.debounce('firebase-nest-refresh', function() {
-        // console.info('FIRE NEST', d);
-        // console.timeStamp('nest');
-        this.fire('firebase-nest-refresh', this.data);
-      }, 200);
+      this.$.query.__dataChanged = function() {};
     },
 
     _dataSource: function(opts, cb) {
@@ -184,8 +181,8 @@
       }
       this.size = items.length;
 
-      if (opts.sortOrder.length) {
-        items = this._sort(items, opts.sortOrder);
+      if (opts.sortOrders.length) {
+        items = this._sort(items, opts.sortOrders);
       }
 
       var start = opts.page * opts.pageSize;
@@ -195,8 +192,8 @@
     },
 
     _sort: function(items, sorters) {
-        this._sorters = sorters;
-        return items.sort(this._multiSort.bind(this));
+      this._sorters = sorters;
+      return items.sort(this._multiSort.bind(this));
 
     },
 
@@ -237,24 +234,57 @@
           return value.toLowerCase().indexOf(filter.value.toString().toLowerCase()) === -1;
         }.bind(this)).length === 0;
       }, this);
-    }
+    },
 
-    // _computeDataAsObject: function(splices) {
-    //   if (splices && splices.indexSplices) {
-    //     splices.indexSplices.forEach(function(s) {
-    //       s.removed.forEach(function(removed) {
-    //         //work around this.delete not implemented https://github.com/Polymer/polymer/issues/2565
-    //         delete(this.dataAsObject[removed.$key]);
-    //         this.notifyPath('dataAsObject.' + removed.$key);
-    //       });
-    //       for (var i = 0; i < s.addedCount; i++) {
-    //         var index = s.index + i;
-    //         var obj = s.object[index];
-    //         this.set('dataAsObject.' + obj.$key, obj);
-    //       }
-    //     }, this);
-    // }
-    // }
+    /*
+    onFirebaseValue: function(e, d) {
+      e.stopPropagation();
+
+      var firebaseKey = d.$key,
+        index = this.data.findIndex(function(d) {
+          return d.$key === firebaseKey;
+        });
+
+      //hack to prevent the change to be reflected to firebase !
+      this.$.query.__syncingToMemory = true;
+      this.set(['data', index].concat(d.key), d.value);
+      // this.notifyPath(['data', index]);
+      this.$.query.__syncingToMemory = false;
+
+      // if(this._useDataSource) {
+      //   this.fire('firebase-item-changed', {
+      //     item: this.data[index],
+
+      //   })
+      // }
+      // we might need to refresh some stuff based on this;
+      // console.info('NEST', d);
+      this.debounce('firebase-nest-refresh', function() {
+        // console.info('FIRE NEST', d);
+        // console.timeStamp('nest');
+        this.fire('firebase-nest-refresh', this.data);
+      }, 200);
+    }
+    */
+
+    /*
+      _computeDataAsObject: function(splices) {
+      if (splices && splices.indexSplices) {
+        splices.indexSplices.forEach(function(s) {
+          s.removed.forEach(function(removed) {
+            //work around this.delete not implemented https://github.com/Polymer/polymer/issues/2565
+            delete(this.dataAsObject[removed.$key]);
+            this.notifyPath('dataAsObject.' + removed.$key);
+          });
+          for (var i = 0; i < s.addedCount; i++) {
+            var index = s.index + i;
+            var obj = s.object[index];
+            this.set('dataAsObject.' + obj.$key, obj);
+          }
+        }, this);
+      }
+    }
+    */
   });
   </script>
 </dom-module>

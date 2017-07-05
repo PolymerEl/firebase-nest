@@ -1,7 +1,6 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../polymerfire/firebase-document.html">
 <link rel="import" href="../polymerfire/firebase-common-behavior.html">
-<link rel="import" href="firebase-value-behavior.html">
 <!--
 `firebase-value` is a wrapper around firebase-document, firing `firebase-value` when value is being retrieved.
 
@@ -10,7 +9,7 @@
 -->
 <dom-module id="firebase-value">
   <template>
-    <firebase-document log="[[log]]" exists="{{exists}}" data="{{value}}" path="[[path]]" disabled="[[disabled]]" app-name="[[appName]]"></firebase-document>
+    <firebase-document log="[[log]]" exists="{{exists}}" data="{{value}}" path="[[path]]" disabled="[[disabled]]" app="[[app]]" app-name="[[appName]]"></firebase-document>
   </template>
   <script>
   Polymer({
@@ -18,15 +17,10 @@
     is: 'firebase-value',
 
     behaviors: [
-      Polymer.firebaseNest.ValueBehavior
+      Polymer.FirebaseCommonBehavior
     ],
 
     properties: {
-
-      path: {
-        type: String,
-        reflectToAttribute: true
-      },
 
       /**
        * The data to returned by firebase-document.
@@ -43,42 +37,73 @@
         type: Object,
         notify: true
       },
+      /**
+       * Path to a Firebase root or endpoint. N.B. `path` is case sensitive.
+       */
+      path: {
+        type: String
+      },
 
+
+      /**
+       * When true, Firebase listeners won't be activated. This can be useful
+       * in situations where elements are loaded into the DOM before they're
+       * ready to be activated (e.g. navigation, initialization scenarios).
+       */
+      disabled: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * `key` the key to add to passed data
+       */
+      key: {
+        type: String,
+        value: 'lookup'
+      },
+
+      /**
+       * When true, will perform detailed logging.
+       */
+      log: {
+        type: Boolean,
+        value: false
+      },
+
+
+      /**
+       * `exists` notify us when we have data
+       */
+      exists: {
+        type: Boolean
+      },
+
+      /* 
+       * `defaultValue` the value to set as default when data does not exists at firebase level.
+       */
+      defaultValue: {
+        type: Object
+      }
     },
 
     observers: [
-      // 'observeData(value, keyArray, data)',
-      // '_observeValueChangeSimple(value)',
       '_observeValueChange(data, value.*)',
       '_observeExistsChange(data, exists)'
     ],
 
-    // getValue: function(value) {
-    //   return (this.exists === true ||  this.defaultValue === undefined) ? value : this.defaultValue;
-    // },
-
     _observeExistsChange: function(data, exists) {
-      // console.info('CHANGED EXISTS 0', exists, this.key, this.value);
       if (exists === true) {
-        // console.info('CHANGED EXISTS 1', this.key, this.value);
         return this.set('data.' + this.key, this.value);
       }
       if (exists === false && this.defaultValue) {
         return this.set('data.' + this.key, this.defaultValue);
-
       }
     },
 
-    // _observeValueChangeSimple: function(value) {
-    //   console.info('CHANGED SIMPLE', value);
-    // },
-
-    _observeValueChange: function(data,changed) {
-      // console.info('CHANGED 0', changed, this.value);
+    _observeValueChange: function(data, changed) {
       if (this.exists) {
-        // console.info('CHANGED 1', 'data.' + [this.key].concat(changed.path.split('.').splice(1)).join('.'), changed, changed.value);
         this.set('data.' + [this.key].concat(changed.path.split('.').splice(1)).join('.'), changed.value);
-
       }
     }
   });
