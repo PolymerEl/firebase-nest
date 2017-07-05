@@ -3,9 +3,10 @@
 
 # \<firebase-nest\>
 
-
 polymerfire based util to construct firebase nested and lookup datastructure
 
+Please note that this component relies on yet unmerged PR to polymerfire, mainly https://github.com/firebase/polymerfire#234 (but also https://github.com/firebase/polymerfire#230 for performance and https://github.com/firebase/polymerfire#235). 
+Those are merged under https://github.com/christophe-g/polymerfire#dev.
 
 Example Usage:
 
