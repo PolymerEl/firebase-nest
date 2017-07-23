@@ -2,110 +2,129 @@
 <link rel="import" href="../polymerfire/firebase-document.html">
 <link rel="import" href="../polymerfire/firebase-common-behavior.html">
 <!--
-`firebase-value` is a wrapper around firebase-document, firing `firebase-value` when value is being retrieved.
+`firebase-value` is a wrapper around firebase-document allowing to link firebase data
+
+example : 
+
+ <vaadin-grid  items="[[gridItems]]">
+    <vaadin-grid-column flex-grow="2">
+      <template>
+        <firebase-value data="{{item}}" key="score" path="/resources/dimension/[[key]]/items/[[item.key]]"></firebase-value>
+        <paper-input no-label-float value="{{item.score.weight}}" min="0" type="number"></paper-input>
+      </template>
+    </vaadin-grid-column>
+    ...
+</vaadin-grid >
+
 
 @demo demo/index.html 
-@event firebase-value
 -->
 <dom-module id="firebase-value">
-  <template>
-    <firebase-document log="[[log]]" exists="{{exists}}" data="{{value}}" path="[[path]]" disabled="[[disabled]]" app="[[app]]" app-name="[[appName]]"></firebase-document>
-  </template>
-  <script>
-  Polymer({
+    <template>
+        <firebase-document log="[[log]]" exists="{{exists}}" data="{{value}}" path="[[path]]" disabled="[[disabled]]" app="[[app]]" app-name="[[appName]]"></firebase-document>
+    </template>
+    <script>
+    Polymer({
 
-    is: 'firebase-value',
+        is: 'firebase-value',
 
-    behaviors: [
-      Polymer.FirebaseCommonBehavior
-    ],
+        behaviors: [
+            Polymer.FirebaseCommonBehavior
+        ],
 
-    properties: {
+        properties: {
 
-      /**
-       * The data to returned by firebase-document.
-       */
-      value: {
-        type: Object,
-        notify: true
-      },
+            /**
+             * The data to returned by firebase-document.
+             */
+            value: {
+                type: Object,
+                notify: true
+            },
 
-      /**
-       * `data` root data that this element will augment
-       */
-      data: {
-        type: Object,
-        notify: true
-      },
-      /**
-       * Path to a Firebase root or endpoint. N.B. `path` is case sensitive.
-       */
-      path: {
-        type: String
-      },
+            /**
+             * `data` root data that this element will enrich
+             */
+            data: {
+                type: Object,
+                notify: true
+            },
+
+            /**
+             * `key` the key to add to passed data. the observer links `value` (e.g. data from firebase) to `data[key]`
+             */
+            key: {
+                type: String,
+                value: 'lookup',
+                observer: '_observeKey'
+            },
+
+            /**
+             * Path to a Firebase root or endpoint. N.B. `path` is case sensitive.
+             */
+            path: {
+                type: String
+            },
+
+            /**
+             * When true, Firebase listeners won't be activated. This can be useful
+             * in situations where elements are loaded into the DOM before they're
+             * ready to be activated (e.g. navigation, initialization scenarios).
+             */
+            disabled: {
+                type: Boolean,
+                value: false
+            },
+
+            /**
+             * When true, will perform detailed logging.
+             */
+            log: {
+                type: Boolean,
+                value: false
+            },
 
 
-      /**
-       * When true, Firebase listeners won't be activated. This can be useful
-       * in situations where elements are loaded into the DOM before they're
-       * ready to be activated (e.g. navigation, initialization scenarios).
-       */
-      disabled: {
-        type: Boolean,
-        value: false
-      },
+            /**
+             * `exists` notify us when we have data
+             */
+            exists: {
+                type: Boolean
+            },
 
-      /**
-       * `key` the key to add to passed data
-       */
-      key: {
-        type: String,
-        value: 'lookup'
-      },
+            /* 
+             * `defaultValue` the value to set as default when data does not exists at firebase level.
+             */
+            defaultValue: {
+                type: Object
+            }
+        },
 
-      /**
-       * When true, will perform detailed logging.
-       */
-      log: {
-        type: Boolean,
-        value: false
-      },
+        observers: [
+            '_observeExistsChange(data, exists)'
+            // '_observeValueChange(data, value.*)',
+            // '_observeDataChange(data.*, value)',
+        ],
 
+        detached: function() {
+            this.unlinkPaths('value');
+        },
 
-      /**
-       * `exists` notify us when we have data
-       */
-      exists: {
-        type: Boolean
-      },
+        _observeKey: function(key, old) {
+            if (old) {
+                this.unlinkPaths('value');
+            }
+            this.linkPaths('value', 'data.' + key);
+        },
 
-      /* 
-       * `defaultValue` the value to set as default when data does not exists at firebase level.
-       */
-      defaultValue: {
-        type: Object
-      }
-    },
-
-    observers: [
-      '_observeValueChange(data, value.*)',
-      '_observeExistsChange(data, exists)'
-    ],
-
-    _observeExistsChange: function(data, exists) {
-      if (exists === true) {
-        return this.set('data.' + this.key, this.value);
-      }
-      if (exists === false && this.defaultValue) {
-        return this.set('data.' + this.key, this.defaultValue);
-      }
-    },
-
-    _observeValueChange: function(data, changed) {
-      if (this.exists) {
-        this.set('data.' + [this.key].concat(changed.path.split('.').splice(1)).join('.'), changed.value);
-      }
-    }
-  });
-  </script>
+        _observeExistsChange: function(data, exists) {
+            if (exists === true) {
+                return this.set('data.' + this.key, this.value);
+            }
+            if (exists === false && this.defaultValue) {
+                return this.set('data.' + this.key, this.defaultValue);
+            }
+        }
+    });
+    </script>
 </dom-module>
