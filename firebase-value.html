@@ -20,111 +20,126 @@ example :
 @demo demo/index.html 
 -->
 <dom-module id="firebase-value">
-    <template>
-        <firebase-document log="[[log]]" exists="{{exists}}" data="{{value}}" path="[[path]]" disabled="[[disabled]]" app="[[app]]" app-name="[[appName]]"></firebase-document>
-    </template>
-    <script>
-    Polymer({
+  <template>
+    <firebase-document log="[[log]]" exists="{{exists}}" data="{{firebaseData}}" path="[[path]]" disabled="[[disabled]]" app="[[app]]" app-name="[[appName]]"></firebase-document>
+  </template>
+  <script>
+  Polymer({
 
-        is: 'firebase-value',
+    is: 'firebase-value',
 
-        behaviors: [
-            Polymer.FirebaseCommonBehavior
-        ],
+    behaviors: [
+      Polymer.FirebaseCommonBehavior
+    ],
 
-        properties: {
+    properties: {
 
-            /**
-             * The data to returned by firebase-document.
-             */
-            value: {
-                type: Object,
-                notify: true
-            },
+      /**
+       * The data to returned by firebase-document.
+       */
+      firebaseData: {
+        type: Object,
+        notify: true
+      },
 
-            /**
-             * `data` root data that this element will enrich
-             */
-            data: {
-                type: Object,
-                notify: true
-            },
+      /**
+       * `data` root data that this element will enrich
+       */
+      data: {
+        type: Object,
+        notify: true
+      },
 
-            /**
-             * `key` the key to add to passed data. the observer links `value` (e.g. data from firebase) to `data[key]`
-             */
-            key: {
-                type: String,
-                value: 'lookup',
-                observer: '_observeKey'
-            },
+      /**
+       * `key` the key to add to passed data. the observer links `value` (e.g. data from firebase) to `data[key]`
+       */
+      key: {
+        type: String,
+        value: 'lookup',
+        observer: '_observeKey'
+      },
 
-            /**
-             * Path to a Firebase root or endpoint. N.B. `path` is case sensitive.
-             */
-            path: {
-                type: String
-            },
+      /**
+       * Path to a Firebase root or endpoint. N.B. `path` is case sensitive.
+       */
+      path: {
+        type: String
+      },
 
-            /**
-             * When true, Firebase listeners won't be activated. This can be useful
-             * in situations where elements are loaded into the DOM before they're
-             * ready to be activated (e.g. navigation, initialization scenarios).
-             */
-            disabled: {
-                type: Boolean,
-                value: false
-            },
+      /**
+       * When true, Firebase listeners won't be activated. This can be useful
+       * in situations where elements are loaded into the DOM before they're
+       * ready to be activated (e.g. navigation, initialization scenarios).
+       */
+      disabled: {
+        type: Boolean,
+        value: false
+      },
 
-            /**
-             * When true, will perform detailed logging.
-             */
-            log: {
-                type: Boolean,
-                value: false
-            },
+      /**
+       * When true, will perform detailed logging.
+       */
+      log: {
+        type: Boolean,
+        value: false
+      },
 
 
-            /**
-             * `exists` notify us when we have data
-             */
-            exists: {
-                type: Boolean
-            },
+      /**
+       * `exists` notify us when we have data
+       */
+      exists: {
+        type: Boolean
+      },
 
-            /* 
-             * `defaultValue` the value to set as default when data does not exists at firebase level.
-             */
-            defaultValue: {
-                type: Object
-            }
-        },
+      /* 
+       * `defaultValue` the value to set as default when data does not exists at firebase level.
+       */
+      defaultValue: {
+        type: Object
+      }
+    },
 
-        observers: [
-            '_observeExistsChange(data, exists)'
-            // '_observeValueChange(data, value.*)',
-            // '_observeDataChange(data.*, value)',
-        ],
+    observers: [
+      '_observeExistsChange(data, exists)',
+    ],
 
-        detached: function() {
-            this.unlinkPaths('value');
-        },
+    detached: function() {
+      this.unlinkPaths('firebaseData');
+    },
 
-        _observeKey: function(key, old) {
-            if (old) {
-                this.unlinkPaths('value');
-            }
-            this.linkPaths('value', 'data.' + key);
-        },
+    _observeKey: function(key, old) {
+      if (old) {
+        this.unlinkPaths('firebaseData');
+      }
+      // make sure we are not overriding data[key]
+      if (this.data && this.data[this.key]) {
+        this._error('key (' + this.key + ') is already defined ', this.data);
+      }
+      this.linkPaths('firebaseData', 'data.' + key);
+    },
 
-        _observeExistsChange: function(data, exists) {
-            if (exists === true) {
-                return this.set('data.' + this.key, this.value);
-            }
-            if (exists === false && this.defaultValue) {
-                return this.set('data.' + this.key, this.defaultValue);
-            }
+    _observeExistsChange: function(data, exists) {
+      if (exists === true) {
+        // check if firebaseData is primitive - in this case linkPaths will not work !
+        if (Object(this.firebaseData) !== this.firebaseData) {
+          // console.info('PRIMITIVE', this.firebaseData);
+          this.unlinkPaths('firebaseData');
+          this._addComplexObserverEffect('_observeFirebaseChange(firebaseData, data)');
         }
-    });
-    </script>
+      }
+      if (exists === false && this.defaultValue) {
+        return this.set('data.' + this.key, this.defaultValue);
+      }
+    },
+
+    /* 
+     * `_observeFirebaseChange` observer only only active when firebase-document returns a primitive value
+     */
+    _observeFirebaseChange: function(firebaseData, data) {
+      this.set('data.' + this.key, this.firebaseData);
+    }
+  });
+
+  </script>
 </dom-module>
