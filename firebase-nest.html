@@ -39,6 +39,43 @@
       },
 
       /* 
+       * `nestedPath` the path to loop throught for loading data [{key: 'myKey', path: '/pathToDb', defaultValue: 'default value', appName: ''}]
+       */
+      nestedPath: {
+        type: Array,
+      },
+
+      /* 
+       * `loading` if nestedPath is set, loaded will be true when all nested path haev been loaded
+       */
+      loading: {
+        type: Boolean,
+        notify: true,
+        value: false,
+        readOnly: true
+      },
+
+      /* 
+       * `percentLoaded` 
+       */
+      percentLoaded: {
+        type: Number,
+        readOnly: true,
+        notify: true,
+        value: 0
+      },
+
+      _loadedCount: {
+        type: Number,
+        readOnly: true,
+        observer: '_observeLoadedCount'
+      },
+
+      _totalCount: {
+        readOnly: true,
+        type: Number
+      },
+      /* 
        * `dataSource`  Function that provides items lazily. Receives arguments params, callback
        *     params.page Requested page index
        *     params.pageSize Current page size
@@ -78,24 +115,144 @@
         notify: true
       },
 
-      /* 
-       * `allowSync`  set to true to make sure we sync with firebase. It HAS to be set to true if we are using two-way binding with dom-repeat ...
-       */
-      // allowSync: {
-      //   type: Boolean,
-      //   value: false
-      // },
-     
     },
 
     listeners: {
+
       // 'firebase-value': 'onFirebaseValue'
     },
+
+    observers: [
+      '_observeNestedPath(data, nestedPath)',
+      '_observeNestedPath(data, nestedPath.*)'
+    ],
 
     attached: function() {
       // IMPORTANT !
       // we Highjack the behavior of firebase-query and prevent data to be written back to the db. If need be, we could go back to standard behavior depending on allowSync
       this.$.query.__dataChanged = function() {};
+    },
+
+    _observeNestedPath: function() {
+      this.debounce('firebase-nest-do-nest', this._doNest, 50);
+    },
+
+    _observeLoadedCount: function() {
+      this.debounce('firebase-nest-calc-percent', this._doCalcPercent, 10);
+    },
+
+    _doCalcPercent: function() {
+      if (this._totalCount === 0) {
+        return this._setPercentLoaded(0);
+      }
+      this._setPercentLoaded(this._loadedCount / this._totalCount * 100);
+    },
+
+    _doNest: function() {
+      if (this.data && this.nestedPath) {
+        var me = this;
+        me._setLoading(true);
+        me._setPercentLoaded(0);
+
+        var database = firebase.database();
+        var nestedPath = this.nestedPath;
+        var data = this.data;
+
+        // this._set_totalCount(nestedPath.length * 4);
+        // this._set_totalCount(0);
+        this._set_loadedCount(0);
+
+        function forEachPromise(items, fn, context) {
+          // we use reduce to make sure we respect the order nestedPath while reading.
+          return items.reduce(function(promise, item) {
+            return promise.then(function() {
+              return fn(item, context);
+            });
+          }, Promise.resolve());
+        }
+
+        function readAllDataPromise(pathItem, data) {
+          // doing this to try improve performance (allow more parallel read when the order is not important), but no real improvement. Need further measurement. 
+          if (pathItem instanceof Array) {
+            return  Promise.all(pathItem.map(getPathItemReadFn(data)))
+          }
+          me._set_totalCount(me._totalCount || 0 + data.length);
+          return Promise.all(data.map(getReadFn(pathItem)));
+        }
+
+        function getPathItemReadFn(data) {
+          me._set_totalCount(me._totalCount || 0 + data.length);
+          return function(pathItem) {
+            return Promise.all(data.map(getReadFn(pathItem)));
+          }
+        }
+
+        // return a function returning a Promise that will read data 
+        function getReadFn(pathItem) {
+          return function(item) {
+            var db = pathItem.appName ? firebase.database(pathItem.appName) : database;
+            var ref = db.ref(parseBinding(pathItem.path, item));
+            var key = pathItem.key;
+            var defaultValue = pathItem.defaultValue;
+            return ref.once('value').then(function(snap) {
+              var exists = snap.exists();
+              if (exists || (defaultValue !== undefined)) {
+                var val = exists ? snap.val() : defaultValue;
+                if (Object(val) === val) {
+                  if (key) {
+                    if (!item[key]) {
+                      item[key] = {};
+                    }
+                    item = item[key];
+                  }
+                  Object.assign(item, val);
+                } else {
+                  //primitive 
+                  if (!key) {
+                    me._error('primitive value need a key');
+                  }
+                  item[key] = val;
+                }
+              }
+              me._set_loadedCount(me._loadedCount + 1);
+              return;
+            })
+          }
+        }
+
+        function parseBinding(txt, item) {
+          var binding = Polymer.Annotations._parseBindings(txt);
+          if (!binding) {
+            return txt;
+          }
+          return binding.map(function(b) {
+            if (b.literal) {
+              return b.literal;
+            }
+            var value;
+            var bind = b.value;
+            if (bind && (value = me.get(bind, me.dataHost))) {
+              return value;
+            }
+            // we need to remove potential item. (e.g. in [[item.key]]) 
+            bind = bind.startsWith('item.') ? bind.substr(5) : bind;
+            if (b.value && (value = me.get(bind, item))) {
+              return value;
+            }
+
+            me._error('cannot compute binding for ', txt);
+          }).join('');
+
+        }
+
+        console.time('readData');
+        forEachPromise(nestedPath, readAllDataPromise, data).then(() => {
+          console.timeEnd('readData');
+          console.log('Data: ', me.data);
+          me._setLoading(false);
+          me.notifyPath('data', me.data);
+        });
+      }
     },
 
     _dataSource: function(opts, cb) {

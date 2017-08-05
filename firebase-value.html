@@ -38,8 +38,7 @@ example :
        * The data to returned by firebase-document.
        */
       firebaseData: {
-        type: Object,
-        notify: true
+        type: Object
       },
 
       /**
@@ -55,8 +54,7 @@ example :
        */
       key: {
         type: String,
-        value: 'lookup',
-        observer: '_observeKey'
+        value: 'lookup'
       },
 
       /**
@@ -84,7 +82,6 @@ example :
         value: false
       },
 
-
       /**
        * `exists` notify us when we have data
        */
@@ -97,49 +94,55 @@ example :
        */
       defaultValue: {
         type: Object
+      },
+
+
+      /* 
+       * `_isPrimitive`  a flag for when firebaseData is primitive. 
+       */
+      _isPrimitive: {
+        type: Boolean,
+        readOnly: true
       }
+
+
     },
 
     observers: [
       '_observeExistsChange(data, exists)',
+      '_observeFirebaseChange(firebaseData, data)',
     ],
 
     detached: function() {
       this.unlinkPaths('firebaseData');
     },
 
-    _observeKey: function(key, old) {
-      if (old) {
-        this.unlinkPaths('firebaseData');
-      }
-      // make sure we are not overriding data[key]
-      if (this.data && this.data[this.key]) {
-        this._error('key (' + this.key + ') is already defined ', this.data);
-      }
-      this.linkPaths('firebaseData', 'data.' + key);
-    },
-
     _observeExistsChange: function(data, exists) {
+      if (!this.key) {
+        return this._error('missing key');
+      }
       if (exists === true) {
         // check if firebaseData is primitive - in this case linkPaths will not work !
         if (Object(this.firebaseData) !== this.firebaseData) {
-          // console.info('PRIMITIVE', this.firebaseData);
           this.unlinkPaths('firebaseData');
-          this._addComplexObserverEffect('_observeFirebaseChange(firebaseData, data)');
+          this._set_isPrimitive(true);
+          return this.set('data.' + this.key, this.firebaseData);
         }
+        if (this.data && this.data[this.key]) {
+          this._warn('key (' + this.key + ') is already defined ', this.data);
+        }
+        this.linkPaths('firebaseData', 'data.' + this.key);
       }
-      if (exists === false && this.defaultValue) {
+      if (exists === false && (this.defaultValue !== undefined)) {
         return this.set('data.' + this.key, this.defaultValue);
       }
     },
 
-    /* 
-     * `_observeFirebaseChange` observer only only active when firebase-document returns a primitive value
-     */
     _observeFirebaseChange: function(firebaseData, data) {
-      this.set('data.' + this.key, this.firebaseData);
+      if(this._isPrimitive && this.exists) {
+          this.set('data.' + this.key, this.firebaseData);
+        }
     }
   });
-
   </script>
 </dom-module>
