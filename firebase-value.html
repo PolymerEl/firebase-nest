@@ -27,9 +27,9 @@ example :
     }
     </style>
     <firebase-document log="[[log]]" exists="{{exists}}" data="{{firebaseData}}" path="[[path]]" disabled="[[disabled]]" app="[[app]]" app-name="[[appName]]"></firebase-document>
-    <template is="dom-if" if="[[show]]">
+    <!-- <template is="dom-if" if="[[show]]">
       <template is="dom-if" if="[[exists]]">[[firebaseData]]</template>
-    </template>
+    </template> -->
   </template>
   <script>
   Polymer({
@@ -116,18 +116,15 @@ example :
       /* 
        * `show` set true to display the value of firebase data. Mostly usefull when we read primitive String and just want to display them.
        */
-      show: {
-        type: Boolean
-      },
-
-
-
+      // show: {
+      //   type: Boolean
+      // }
 
     },
 
     observers: [
       '_observeExistsChange(data, exists)',
-      '_observeFirebasePrimitiveChange(firebaseData, data)',
+      '_observeFirebasePrimitiveChange(firebaseData, data)'
     ],
 
     detached: function() {
@@ -139,6 +136,7 @@ example :
         return this._error('missing key');
       }
       if (exists === true) {
+        console.info('DB CHANGE', data, this.firebaseData);
         // check if firebaseData is primitive - in this case linkPaths will not work !
         if (Object(this.firebaseData) !== this.firebaseData) {
           this.unlinkPaths('firebaseData');
@@ -148,6 +146,7 @@ example :
         if (this.data && this.data[this.key]) {
           this._warn('key (' + this.key + ') is already defined ', this.data);
         }
+        this.set('data.' + this.key, this.firebaseData);
         this.linkPaths('firebaseData', 'data.' + this.key);
       }
       if (exists === false && (this.defaultValue !== undefined)) {
