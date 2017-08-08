@@ -3,21 +3,6 @@
 <link rel="import" href="../polymerfire/firebase-common-behavior.html">
 <!--
 `firebase-value` is a wrapper around firebase-document allowing to link firebase data
-
-example : 
-
- <vaadin-grid  items="[[gridItems]]">
-    <vaadin-grid-column flex-grow="2">
-      <template>
-        <firebase-value data="{{item}}" key="score" path="/resources/dimension/[[key]]/items/[[item.key]]"></firebase-value>
-        <paper-input no-label-float value="{{item.score.weight}}" min="0" type="number"></paper-input>
-      </template>
-    </vaadin-grid-column>
-    ...
-</vaadin-grid >
-
-
-@demo demo/index.html 
 -->
 <dom-module id="firebase-value">
   <template>
@@ -27,9 +12,9 @@ example :
     }
     </style>
     <firebase-document log="[[log]]" exists="{{exists}}" data="{{firebaseData}}" path="[[path]]" disabled="[[disabled]]" app="[[app]]" app-name="[[appName]]"></firebase-document>
-    <!-- <template is="dom-if" if="[[show]]">
+    <template is="dom-if" if="[[show]]">
       <template is="dom-if" if="[[exists]]">[[firebaseData]]</template>
-    </template> -->
+    </template>
   </template>
   <script>
   Polymer({
@@ -116,9 +101,9 @@ example :
       /* 
        * `show` set true to display the value of firebase data. Mostly usefull when we read primitive String and just want to display them.
        */
-      // show: {
-      //   type: Boolean
-      // }
+      show: {
+        type: Boolean
+      }
 
     },
 
