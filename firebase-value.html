@@ -21,7 +21,15 @@ example :
 -->
 <dom-module id="firebase-value">
   <template>
+    <style>
+     :host {
+      display: inline;
+    }
+    </style>
     <firebase-document log="[[log]]" exists="{{exists}}" data="{{firebaseData}}" path="[[path]]" disabled="[[disabled]]" app="[[app]]" app-name="[[appName]]"></firebase-document>
+    <template is="dom-if" if="[[show]]">
+      <template is="dom-if" if="[[exists]]">[[firebaseData]]</template>
+    </template>
   </template>
   <script>
   Polymer({
@@ -103,14 +111,23 @@ example :
       _isPrimitive: {
         type: Boolean,
         readOnly: true
-      }
+      },
+
+      /* 
+       * `show` set true to display the value of firebase data. Mostly usefull when we read primitive String and just want to display them.
+       */
+      show: {
+        type: Boolean
+      },
+
+
 
 
     },
 
     observers: [
       '_observeExistsChange(data, exists)',
-      '_observeFirebaseChange(firebaseData, data)',
+      '_observeFirebasePrimitiveChange(firebaseData, data)',
     ],
 
     detached: function() {
@@ -138,10 +155,10 @@ example :
       }
     },
 
-    _observeFirebaseChange: function(firebaseData, data) {
-      if(this._isPrimitive && this.exists) {
-          this.set('data.' + this.key, this.firebaseData);
-        }
+    _observeFirebasePrimitiveChange: function(firebaseData, data) {
+      if (this._isPrimitive && this.exists) {
+        this.set('data.' + this.key, this.firebaseData);
+      }
     }
   });
   </script>
