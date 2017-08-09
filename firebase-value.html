@@ -121,7 +121,7 @@
         return this._error('missing key');
       }
       if (exists === true) {
-        console.info('DB CHANGE', data, this.firebaseData);
+        // console.info('DB CHANGE', data, this.firebaseData);
         // check if firebaseData is primitive - in this case linkPaths will not work !
         if (Object(this.firebaseData) !== this.firebaseData) {
           this.unlinkPaths('firebaseData');
