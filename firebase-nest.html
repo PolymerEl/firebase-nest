@@ -4,12 +4,27 @@
 <!--
 `firebase-nest` is a wrapper element around firebase-query and designed to work well with `firebase-value`.
 
-
 @demo demo/index.html 
 -->
 <dom-module id="firebase-nest">
   <template>
-    <firebase-query id="query" log="[[log]]" size="{{size}}" order-by-child="[[orderByChild]]" order-by-value="[[orderByValue]]" start-at="[[startAt]]" end-at="[[endAt]]" equal-to="[[equalTo]]" limit-to-first="[[limitToFirst]]" limit-to-last="[[limitToLast]]" data="{{data}}" disabled="[[disabled]]" path="[[path]]" log="[[log]]" app="[[app]]" app-name="[[appName]]"></firebase-query>
+    <firebase-query id="query" 
+    log="[[log]]" 
+    size="{{size}}" 
+    order-by-child="[[orderByChild]]" 
+    order-by-value="[[orderByValue]]" 
+    start-at="[[startAt]]" 
+    end-at="[[endAt]]" 
+    equal-to="[[equalTo]]" 
+    limit-to-first="[[limitToFirst]]" 
+    limit-to-last="[[limitToLast]]" 
+    data="{{data}}" 
+    exists="{{exists}}"
+    disabled="[[disabled]]" 
+    path="[[path]]" 
+    log="[[log]]" 
+    app="[[app]]" 
+    app-name="[[appName]]"></firebase-query>
     <content></content>
   </template>
   <script>
@@ -46,12 +61,24 @@
       },
 
       /* 
-       * `loading` if nestedPath is set, loaded will be true when all nested path haev been loaded
+       * `loading` if nestedPath is set, loaded will be true when all nested path have been loaded
        */
       loading: {
         type: Boolean,
         notify: true,
         value: false,
+        readOnly: true
+      },
+
+
+      /**
+       * `exists` is set to `true` when the data actually exists for the specified path; `false` otherwise. 
+       * When we are unable to determine whether data exists or not (e.g. first round trip to the server not yet performed) the value is `null`
+       */
+      exists: {
+        type: Boolean,
+        notify: true,
+        value: null, 
         readOnly: true
       },
 
@@ -75,6 +102,7 @@
         readOnly: true,
         type: Number
       },
+      
       /* 
        * `dataSource`  Function that provides items lazily. Receives arguments params, callback
        *     params.page Requested page index
@@ -123,8 +151,7 @@
     },
 
     observers: [
-      '_observeNestedPath(data, nestedPath)',
-      '_observeNestedPath(data, nestedPath.*)'
+      '_observeNestedPath(data, nestedPath, nestedPath.*)'
     ],
 
     attached: function() {
@@ -174,7 +201,7 @@
         function readAllDataPromise(pathItem, data) {
           // doing this to try improve performance (allow more parallel read when the order is not important), but no real improvement. Need further measurement. 
           if (pathItem instanceof Array) {
-            return  Promise.all(pathItem.map(getPathItemReadFn(data)))
+            return Promise.all(pathItem.map(getPathItemReadFn(data)));
           }
           me._set_totalCount(me._totalCount || 0 + data.length);
           return Promise.all(data.map(getReadFn(pathItem)));
@@ -184,26 +211,28 @@
           me._set_totalCount(me._totalCount || 0 + data.length);
           return function(pathItem) {
             return Promise.all(data.map(getReadFn(pathItem)));
-          }
+          };
         }
 
         // return a function returning a Promise that will read data 
         function getReadFn(pathItem) {
+          
+          var db = pathItem.appName ? firebase.database(pathItem.appName) : database;
+          var key = pathItem.key;
+          var defaultValue = pathItem.defaultValue;
+          var defaultIsObject = Object(defaultValue ) === defaultValue ;
+
           return function(item) {
-            var db = pathItem.appName ? firebase.database(pathItem.appName) : database;
             var ref = db.ref(parseBinding(pathItem.path, item));
-            var key = pathItem.key;
-            var defaultValue = pathItem.defaultValue;
             return ref.once('value').then(function(snap) {
-              var exists = snap.exists();
-              if (exists || (defaultValue !== undefined)) {
-                var val = exists ? snap.val() : defaultValue;
-                if (Object(val) === val) {
+                var val = snap.val() ;
+                if (Object(val) === val || defaultIsObject) {
+                  val = Object.assign({}, defaultValue, val);
                   if (key) {
                     if (!item[key]) {
                       item[key] = {};
                     }
-                    item = item[key];
+                    item = item[key];  
                   }
                   Object.assign(item, val);
                 } else {
@@ -211,13 +240,13 @@
                   if (!key) {
                     me._error('primitive value need a key');
                   }
-                  item[key] = val;
+                  item[key] = val || defaultValue;
                 }
-              }
+              // }
               me._set_loadedCount(me._loadedCount + 1);
               return;
-            })
-          }
+            });
+          };
         }
 
         function parseBinding(txt, item) {
