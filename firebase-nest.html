@@ -159,6 +159,7 @@
     },
 
     _observeNestedPath: function() {
+      if(this.isNesting) {return;}
       this.debounce('firebase-nest-do-nest', this._doNest, 50);
     },
 
@@ -174,7 +175,8 @@
     },
 
     _doNest: function() {
-      if (this.data && this.nestedPath) {
+      if (this.data && this.nestedPath && !this.isNesting) {
+        this.isNesting = true;
         var me = this;
         me._setLoading(true);
         me._setPercentLoaded(0);
@@ -215,7 +217,7 @@
         // return a function returning a Promise that will read data 
         function getReadFn(pathItem) {
           
-          var db = pathItem.appName ? firebase.database(pathItem.appName) : database;
+          var db = pathItem.appName ? firebase.app(pathItem.appName).database() : database;
           var key = pathItem.key;
           var defaultValue = pathItem.defaultValue;
           var defaultIsObject = Object(defaultValue ) === defaultValue ;
@@ -273,11 +275,26 @@
         }
 
         console.time('readData');
-        forEachPromise(nestedPath, readAllDataPromise, data).then(() => {
-          console.timeEnd('readData');
-          console.log('Data: ', me.data);
-          me._setLoading(false);
-          me.notifyPath('data', me.data);
+        forEachPromise(nestedPath, readAllDataPromise, data)
+          .then(() => {
+            console.timeEnd('readData');
+            console.log('Data: ', me.data);
+            me._setLoading(false);
+            
+            var data = me.data;
+            // me.set('data', []);
+            // me.set('data', data);
+            // me._pathEffector('data', me.data);
+            // me._notifyPathUp('data', me.data);
+            me.notifyPath('data', me.data);
+            me.isNesting = false;
+            
+            // we fire this as a way to circumvent https://github.com/PolymerElements/paper-dropdown-menu/issues/197
+            me.fire('async-value');
+            // me._debounceFire()
+          })
+        .catch(e => {
+          console.error(e);
         });
       }
     },

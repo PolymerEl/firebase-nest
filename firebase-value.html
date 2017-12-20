@@ -126,13 +126,20 @@
         if (Object(this.firebaseData) !== this.firebaseData) {
           this.unlinkPaths('firebaseData');
           this._set_isPrimitive(true);
-          return this.set('data.' + this.key, this.firebaseData);
+          this.set('data.' + this.key, this.firebaseData);
+          // this.fire('async-value');
+          this.debounceFire();
+          return;
         }
         if (this.data && this.data[this.key]) {
           this._warn('key (' + this.key + ') is already defined ', this.data);
         }
         this.set('data.' + this.key, this.firebaseData);
         this.linkPaths('firebaseData', 'data.' + this.key);
+        // we fire this as a way to circumvent https://github.com/PolymerElements/paper-dropdown-menu/issues/197
+        // this.fire('async-value');
+        this.debounceFire();
+
       }
       if (exists === false && (this.defaultValue !== undefined)) {
         return this.set('data.' + this.key, this.defaultValue);
@@ -142,7 +149,14 @@
     _observeFirebasePrimitiveChange: function(firebaseData, data) {
       if (this._isPrimitive && this.exists) {
         this.set('data.' + this.key, this.firebaseData);
+        this.debounceFire();
       }
+    },
+
+    debounceFire: function() {
+      this.debounce('firebase-value-debounce', function() {
+        this.fire('async-value');   
+      }, 300);
     }
   });
   </script>
