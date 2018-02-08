@@ -4,14 +4,20 @@
 <!--
 `firebase-value` is a wrapper around firebase-document allowing to link firebase data
 -->
-<dom-module id="firebase-value">
+<dom-module id="firebase-value-span">
   <template>
+    <style>
+     :host {
+      display: inline;
+    }
+    </style>
     <firebase-document log="[[log]]" exists="{{exists}}" data="{{firebaseData}}" path="[[path]]" disabled="[[disabled]]" app="[[app]]" app-name="[[appName]]"></firebase-document>
+    <template is="dom-if" if="[[exists]]">[[firebaseData]]</template>
   </template>
   <script>
   Polymer({
 
-    is: 'firebase-value',
+    is: 'firebase-value-span',
 
     behaviors: [
       Polymer.firebaseNest.firebaseValue
