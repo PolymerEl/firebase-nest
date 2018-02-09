@@ -110,7 +110,6 @@ Polymer.firebaseNest.firebaseValueImpl = {
         this.unlinkPaths('firebaseData');
         this._set_isPrimitive(true);
         this.set('data.' + this.key, this.firebaseData);
-        // this.fire('async-value');
         this.debounceFire();
         return;
       }
@@ -119,8 +118,6 @@ Polymer.firebaseNest.firebaseValueImpl = {
       }
       this.set('data.' + this.key, this.firebaseData);
       this.linkPaths('firebaseData', 'data.' + this.key);
-      // we fire this as a way to circumvent https://github.com/PolymerElements/paper-dropdown-menu/issues/197
-      // this.fire('async-value');
       this.debounceFire();
 
     }
@@ -138,6 +135,7 @@ Polymer.firebaseNest.firebaseValueImpl = {
 
   debounceFire: function() {
     this.debounce('firebase-value-debounce', function() {
+      // we fire this as a way to circumvent https://github.com/PolymerElements/paper-dropdown-menu/issues/197
       this.fire('async-value');
     }, 300);
   }
