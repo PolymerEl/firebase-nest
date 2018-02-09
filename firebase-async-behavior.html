@@ -1,0 +1,58 @@
+<!--
+@license
+Copyright 2016 Google Inc. All Rights Reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file or at
+https://github.com/firebase/polymerfire/blob/master/LICENSE
+-->
+<link rel="import" href="../polymer/polymer.html">
+<script>
+'use strict';
+
+/* 
+ *  Util behavior to circumvent https://github.com/PolymerElements/paper-dropdown-menu/issues/197
+ *  We listen to `async-value` event and re-set all elements having `[async-value]` attribute
+ */
+
+/** @polymerBehavior Polymer.firebaseNest.async */
+window.Polymer = window.Polymer || {};
+Polymer.firebaseNest = Polymer.firebaseNest || {};
+Polymer.firebaseNest.async = {
+  properties: {
+    /**
+     * `__registeredItems` array of items that need to be re-synched
+     */
+    __registeredItems: {
+      type: Array
+    }
+
+  },
+
+  listeners: {
+    'async-value': 'resetAsync'
+  },
+
+  attached: function() {
+    var me = this;
+    this.set('__registeredItems', this.querySelectorAll('*[async-value]'));
+  },
+
+  detached: function() {
+    this.set('__registeredItems', []);
+  },
+
+  // asyncValue: function(e, d) {
+  //   this.debounce('asyncValueDebounce', this.resetAsync, 300);
+  // },
+
+  resetAsync: function() {
+    this.__registeredItems.forEach(item => {
+      if (item && item.selectedItem && item._selectedItemChanged) {
+        item._selectedItemChanged(item.selectedItem);
+      }
+    });
+  }
+
+};
+
+</script>
