@@ -41,10 +41,6 @@ Polymer.firebaseNest.async = {
     this.set('__registeredItems', []);
   },
 
-  // asyncValue: function(e, d) {
-  //   this.debounce('asyncValueDebounce', this.resetAsync, 300);
-  // },
-
   resetAsync: function() {
     this.__registeredItems.forEach(item => {
       if (item && item.selectedItem && item._selectedItemChanged) {
