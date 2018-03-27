@@ -127,6 +127,7 @@ Polymer.firebaseNest.firebaseValueImpl = {
   },
 
   _observeFirebasePrimitiveChange: function(firebaseData, data) {
+    // XXX(cg): we need a similar mechanism event if not primitive. 
     if (this._isPrimitive && this.exists) {
       this.set('data.' + this.key, this.firebaseData);
       this.debounceFire();
