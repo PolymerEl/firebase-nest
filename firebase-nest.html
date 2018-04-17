@@ -282,16 +282,11 @@
             me._setLoading(false);
             
             var data = me.data;
-            // me.set('data', []);
-            // me.set('data', data);
-            // me._pathEffector('data', me.data);
-            // me._notifyPathUp('data', me.data);
             me.notifyPath('data', me.data);
             me.isNesting = false;
             
             // we fire this as a way to circumvent https://github.com/PolymerElements/paper-dropdown-menu/issues/197
             me.fire('async-value');
-            // me._debounceFire()
           })
         .catch(e => {
           console.error(e);
