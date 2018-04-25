@@ -113,9 +113,9 @@ Polymer.firebaseNest.firebaseValueImpl = {
         this.debounceFire();
         return;
       }
-      if (this.data && this.data[this.key]) {
-        this._warn('key (' + this.key + ') is already defined ', this.data);
-      }
+      // if (this.data && this.data[this.key]) {
+      //   this._warn('key (' + this.key + ') is already defined ', this.data);
+      // }
       this.set('data.' + this.key, this.firebaseData);
       this.linkPaths('firebaseData', 'data.' + this.key);
       this.debounceFire();
