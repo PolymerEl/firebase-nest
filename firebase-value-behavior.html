@@ -118,6 +118,8 @@ Polymer.firebaseNest.firebaseValueImpl = {
       // }
       this.set('data.' + this.key, this.firebaseData);
       this.linkPaths('firebaseData', 'data.' + this.key);
+      //XXX2.0(cg): this._createMehodObserver() instead
+      // this._addComplexObserverEffect('_observeFirebaseData(firebaseData.*)');
       this.debounceFire();
 
     }
@@ -125,6 +127,17 @@ Polymer.firebaseNest.firebaseValueImpl = {
       return this.set('data.' + this.key, this.defaultValue);
     }
   },
+  // _observeFirebaseData: function(changeRecord)  {
+  //   if(this.exists && !this._isChanging && !this._isPrimitive && changeRecord.path) {
+
+  //     console.log('path: ' + changeRecord.path);
+  //       // console.log('value: ' + changeRecord.value);
+  //     this._isChanging = true;
+  //     this.set('data.' + this.key + changeRecord.path.replace('firebaseData.', '.'), changeRecord.value);
+  //     this.debounceFire();
+  //     this._isChanging = false;
+  //   }
+  // },
 
   _observeFirebasePrimitiveChange: function(firebaseData, data) {
     // XXX(cg): we need a similar mechanism event if not primitive. 
