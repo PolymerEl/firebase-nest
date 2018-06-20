@@ -25,7 +25,7 @@
     log="[[log]]" 
     app="[[app]]" 
     app-name="[[appName]]"></firebase-query>
-    <content></content>
+    <slot></slot>
   </template>
   <script>
   Polymer({
@@ -54,10 +54,19 @@
       },
 
       /* 
+       * `hardReset` sometimes, we need to really make sure data is properly reset (e.g. in a dom-repeat, when the label is reset, 
+       * https://github.com/Polymer/polymer/issues/3548) 
+       */
+       hardReset : {
+         type:  Boolean,
+         value: false
+         },
+
+      /* 
        * `nestedPath` the path to loop throught for loading data [{key: 'myKey', path: '/pathToDb', defaultValue: 'default value', appName: ''}]
        */
       nestedPath: {
-        type: Array,
+        type: Array
       },
 
       /* 
@@ -225,7 +234,7 @@
           return function(item) {
             var ref = db.ref(parseBinding(pathItem.path, item));
             return ref.once('value').then(function(snap) {
-                var val = snap.val() ;
+                let val = snap.val() ;
                 if (Object(val) === val || defaultIsObject) {
                   val = Object.assign({}, defaultValue, val);
                   if (key) {
@@ -240,7 +249,16 @@
                   if (!key) {
                     me._error('primitive value need a key');
                   }
-                  item[key] = val || defaultValue;
+                  val = val || defaultValue;
+                  // Note(cg): we only assign value to item if the read return smth 
+                  // this allows to override sometimes override values. 
+                  if(item[key]) {
+                    if(val || val === 0 || val === '') {
+                     item[key] = val;
+                    }
+                    return;
+                  }
+                  item[key] = val;
                 }
               // }
               me._set_loadedCount(me._loadedCount + 1);
@@ -282,7 +300,23 @@
             me._setLoading(false);
             
             var data = me.data;
-            me.notifyPath('data', me.data);
+            if(data.length) {
+              if(me.hardReset) {
+                me.set('data', []);
+                me.async(() => {
+                  me.set('data', data);
+                  me.async(() => {
+                    me.isNesting = false;
+                    me.fire('async-value');
+                  });
+                });
+                return;
+                // me.notifyPath('data', []);
+              }
+              else {
+                me.notifyPath('data', data);
+              }
+            }
             me.isNesting = false;
             
             // we fire this as a way to circumvent https://github.com/PolymerElements/paper-dropdown-menu/issues/197

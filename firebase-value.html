@@ -15,8 +15,66 @@
 
     behaviors: [
       Polymer.firebaseNest.firebaseValue
-    ]
+    ],
+
+    observers: [
+      '_observeExistsChange(data, exists)',
+      '_observeFirebasePrimitiveChange(firebaseData, data)'
+    ],
+
+    detached: function() {
+      this.unlinkPaths('firebaseData');
+    },
+
+    _observeExistsChange: function(data, exists) {
+      if (!this.key) {
+        return this._error('missing key');
+      }
+      if (exists === true) {
+        // console.info('DB CHANGE', data, this.firebaseData);
+        // check if firebaseData is primitive - in this case linkPaths will not work !
+        if (Object(this.firebaseData) !== this.firebaseData) {
+          this.unlinkPaths('firebaseData');
+          this._set_isPrimitive(true);
+          this.set('data.' + this.key, this.firebaseData);
+          this.debounceFire();
+          return;
+        }
+        // if (this.data && this.data[this.key]) {
+        //   this._warn('key (' + this.key + ') is already defined ', this.data);
+        // }
+        this.set('data.' + this.key, this.firebaseData);
+        this.linkPaths('firebaseData', 'data.' + this.key);
+        //XXX2.0(cg): this._createMehodObserver() instead
+        // this._addComplexObserverEffect('_observeFirebaseData(firebaseData.*)');
+        this.debounceFire();
+
+      }
+      if (exists === false && (this.defaultValue !== undefined)) {
+        return this.set('data.' + this.key, this.defaultValue);
+      }
+    },
+    // _observeFirebaseData: function(changeRecord)  {
+    //   if(this.exists && !this._isChanging && !this._isPrimitive && changeRecord.path) {
+
+    //     console.log('path: ' + changeRecord.path);
+    //       // console.log('value: ' + changeRecord.value);
+    //     this._isChanging = true;
+    //     this.set('data.' + this.key + changeRecord.path.replace('firebaseData.', '.'), changeRecord.value);
+    //     this.debounceFire();
+    //     this._isChanging = false;
+    //   }
+    // },
+
+    _observeFirebasePrimitiveChange: function(firebaseData, data) {
+      // XXX(cg): we need a similar mechanism event if not primitive. 
+      if (this._isPrimitive && this.exists) {
+        this.set('data.' + this.key, this.firebaseData);
+        this.debounceFire();
+      }
+    },
 
   });
+
   </script>
 </dom-module>

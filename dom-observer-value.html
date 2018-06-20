@@ -1,0 +1,142 @@
+<link rel="import" href="../polymer/polymer.html">
+<!-- <link rel="import" href="firebase-value-behavior.html"> -->
+<!--
+`dom-observer-value` sets data[key] to the valo of htmltext 
+-->
+<dom-module id="dom-observer-value">
+  <template>
+    <slot></slot>
+  </template>
+  <script>
+  Polymer({
+
+    is: 'dom-observer-value',
+
+    properties: {
+
+      /**
+       * `data` root data that this element will enrich
+       */
+      data: {
+        type: Object,
+        notify: true
+      },
+
+      /**
+       * `key` the key to add to passed data. the observer links `value` (e.g. data from firebase) to `data[key]`
+       */
+      key: {
+        type: String,
+        value: 'lookup'
+      },
+
+      config: {
+        type: Object,
+        value: {
+          childList: true,
+          subtree: true
+        }
+      },
+
+      /* 
+       * CSS `selector` if we only want to observe specific nodes
+       */
+      selector: {
+        type: String
+      },
+
+      /* 
+       * `delay` used as a debounce delay
+       */
+      delay: {
+        type: Number,
+        value: 200
+      },
+
+      _mutationObserver: {
+        type: Function
+      },
+
+      _targetNodes: {
+        type: Array
+      }
+    },
+
+    behaviors: [
+      // Polymer.firebaseNest.firebaseValue,
+      // Polymer.firebaseNest.domValueBehavior,
+    ],
+
+    // observers: [],
+
+    // ready: function() {
+    //   const observerCallback = mutations => {
+    //     mutations.forEach(mutation => {
+    //       this.handleMutation(mutation);
+    //     });
+    //   };
+
+    //   this._mutationObserver = new MutationObserver(observerCallback);
+    //   this._targetNodes = this.selector ? Polymer.dom(this.root).querySelectorAll(this.selector) : [this];
+
+    //   this._targetNodes.forEach(targetNode => {
+    //     this._mutationObserver.observe(targetNode, this.config);
+    //   });
+
+    // },
+
+    // Note(cg): 2.0 : 
+    /* 
+     * https://www.polymer-project.org/2.0/docs/devguide/shadow-dom
+     * 
+     * this._observer = new Polymer.FlattenedNodesObserver(this.$.slot, (info) => {
+     *   this._processNewNodes(info.addedNodes);
+     *   this._processRemovedNodes(info.removedNodes);
+     *  });  
+     */
+
+    attached: function() {
+      // this._observer = Polymer.dom(this.$.distributed).observeNodes(this._onNodesChange);
+      this._observer = Polymer.dom(this).observeNodes(this._onNodesChange);
+
+      // we also add mutation Observer as cannot make overveNodes work properly...
+      this._mutationObserver = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+          this._handleMutation(mutation);
+        });
+      });
+      this._targetNodes = this.selector ? Polymer.dom(this.root).querySelectorAll(this.selector) : [this];
+
+      this._targetNodes.forEach(targetNode => {
+        this._mutationObserver.observe(targetNode, this.config);
+      });
+
+    },
+
+    // detached: function() {
+    //    // Polymer.dom(this.$.distributed).unobserveNodes(this._observer);
+    //    Polymer.dom(this).unobserveNodes(this._observer);
+    //   // this._mutationObserver.disconnect();
+    // },
+
+    _handleMutation: function(mutation) {
+      console.info('MUTATION', mutation);
+      this._setData(mutation);
+    },
+
+    _onNodesChange: function(mutation) {
+      console.info('NODE CHANGE', mutation, mutation.target.textContent);
+      this._setData(mutation);
+    },
+
+    _setData: function(mutation) {
+      if(this.data && this.key && mutation.target) {
+        this.debounce('dom-observer-value-debounce', function() {
+          this.set('data.' + this.key, mutation.target.textContent);
+      }, this.delay);
+      }
+    }
+  });
+
+  </script>
+</dom-module>

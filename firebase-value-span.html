@@ -10,9 +10,10 @@
      :host {
       display: inline;
     }
+
     </style>
     <firebase-document log="[[log]]" exists="{{exists}}" data="{{firebaseData}}" path="[[path]]" disabled="[[disabled]]" app="[[app]]" app-name="[[appName]]"></firebase-document>
-    <template is="dom-if" if="[[exists]]">[[firebaseData]]</template>
+    [[displayValue]]
   </template>
   <script>
   Polymer({
@@ -21,8 +22,38 @@
 
     behaviors: [
       Polymer.firebaseNest.firebaseValue
-    ]
+    ],
+
+    properties: {
+      /* 
+       * `displayValue`  
+       */
+      displayValue: {
+        type: String,
+        computed: '_computeDisplayValue(exists, defaultValue, firebaseData)'
+      },
+
+      loadingValue: {
+        type: String,
+        value: '...'
+      }
+    },
+
+    observers: [
+      // '_observeData(exists, defaultValue)'
+    ],
+
+    _computeDisplayValue: function(exists, defaultValue, firebaseData) {
+      if(exists === false) {
+        return typeof defaultValue === 'undefined' ?  '' : defaultValue;
+      }
+      if(exists === null) {
+        return this.loadingValue;
+      }
+      return firebaseData;
+    }
 
   });
+
   </script>
 </dom-module>
