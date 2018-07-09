@@ -30,7 +30,7 @@
        */
       displayValue: {
         type: String,
-        computed: '_computeDisplayValue(exists, defaultValue, firebaseData)'
+        computed: '_computeDisplayValue(exists, firebaseData)'
       },
 
       loadingValue: {
@@ -43,9 +43,9 @@
       // '_observeData(exists, defaultValue)'
     ],
 
-    _computeDisplayValue: function(exists, defaultValue, firebaseData) {
+    _computeDisplayValue: function(exists, firebaseData) {
       if(exists === false) {
-        return typeof defaultValue === 'undefined' ?  '' : defaultValue;
+        return typeof this.defaultValue === 'undefined' ?  '' : this.defaultValue ;
       }
       if(exists === null) {
         return this.loadingValue;

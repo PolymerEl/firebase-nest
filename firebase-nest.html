@@ -66,6 +66,7 @@
        * `nestedPath` the path to loop throught for loading data [{key: 'myKey', path: '/pathToDb', defaultValue: 'default value', appName: ''}]
        */
       nestedPath: {
+        notify: true,
         type: Array
       },
 
@@ -168,7 +169,7 @@
     },
 
     _observeNestedPath: function() {
-      if(this.isNesting) {return;}
+      // if(this.isNesting) {return;}
       this.debounce('firebase-nest-do-nest', this._doNest, 50);
     },
 
@@ -184,7 +185,7 @@
     },
 
     _doNest: function() {
-      if (this.data && this.nestedPath && !this.isNesting) {
+      if (this.data && this.nestedPath) {
         this.isNesting = true;
         var me = this;
         me._setLoading(true);
@@ -198,11 +199,11 @@
         // this._set_totalCount(0);
         this._set_loadedCount(0);
 
-        function forEachPromise(items, fn, context) {
+        function forEachPromise(items, context) {
           // we use reduce to make sure we respect the order nestedPath while reading.
-          return items.reduce(function(promise, item) {
+          return items.filter(item => item.status !== 'loading' && item.status !== 'loaded'  ).reduce(function(promise, item) {
             return promise.then(function() {
-              return fn(item, context);
+              return readAllDataPromise(item, context);
             });
           }, Promise.resolve());
         }
@@ -213,7 +214,14 @@
             return Promise.all(pathItem.map(getPathItemReadFn(data)));
           }
           me._set_totalCount(me._totalCount || 0 + data.length);
-          return Promise.all(data.map(getReadFn(pathItem)));
+          pathItem.status = 'loading';
+          me.fire('firebase-nest-loading', pathItem);
+          
+          return Promise.all(data.map(getReadFn(pathItem)))
+            .then(() => {
+               pathItem.status = 'loaded';
+               me.fire('firebase-nest-loaded', pathItem);
+            });
         }
 
         function getPathItemReadFn(data) {
@@ -293,7 +301,7 @@
         }
 
         console.time('readData');
-        forEachPromise(nestedPath, readAllDataPromise, data)
+        forEachPromise(nestedPath, data)
           .then(() => {
             console.timeEnd('readData');
             console.log('Data: ', me.data);
