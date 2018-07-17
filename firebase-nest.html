@@ -169,7 +169,7 @@
     },
 
     _observeNestedPath: function() {
-      // if(this.isNesting) {return;}
+      if(this.isHardResetting) {return;}
       this.debounce('firebase-nest-do-nest', this._doNest, 50);
     },
 
@@ -185,8 +185,8 @@
     },
 
     _doNest: function() {
-      if (this.data && this.nestedPath) {
-        this.isNesting = true;
+      if (this.data && this.data.length && this.nestedPath && !this.isHardResetting) {
+        // this.isNesting = true;
         var me = this;
         me._setLoading(true);
         me._setPercentLoaded(0);
@@ -286,11 +286,11 @@
             }
             var value;
             var bind = b.value;
-            if (bind && (value = me.get(bind, me.dataHost))) {
-              return value;
-            }
+            // if (bind && (value = me.get(bind, me.dataHost))) {
+            //   return value;
+            // }
             // we need to remove potential item. (e.g. in [[item.key]]) 
-            bind = bind.startsWith('item.') ? bind.substr(5) : bind;
+            // bind = bind.startsWith('item.') ? bind.substr(5) : bind;
             if (b.value && (value = me.get(bind, item))) {
               return value;
             }
@@ -305,16 +305,17 @@
           .then(() => {
             console.timeEnd('readData');
             console.log('Data: ', me.data);
-            me._setLoading(false);
             
             var data = me.data;
             if(data.length) {
               if(me.hardReset) {
+                me.isHardResetting = true;
                 me.set('data', []);
                 me.async(() => {
                   me.set('data', data);
                   me.async(() => {
-                    me.isNesting = false;
+                    me.isHardResetting = false;
+                    // me.isNesting = false;
                     me.fire('async-value');
                   });
                 });
@@ -325,8 +326,9 @@
                 me.notifyPath('data', data);
               }
             }
-            me.isNesting = false;
-            
+            me._setLoading(false);
+            me.isHardResetting = false;
+
             // we fire this as a way to circumvent https://github.com/PolymerElements/paper-dropdown-menu/issues/197
             me.fire('async-value');
           })
