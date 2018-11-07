@@ -88,7 +88,6 @@
       exists: {
         type: Boolean,
         notify: true,
-        value: null, 
         readOnly: true
       },
 
@@ -199,16 +198,16 @@
         // this._set_totalCount(0);
         this._set_loadedCount(0);
 
-        function forEachPromise(items, context) {
+        const forEachPromise = (items, context) =>{
           // we use reduce to make sure we respect the order nestedPath while reading.
           return items.filter(item => item.status !== 'loading' && item.status !== 'loaded'  ).reduce(function(promise, item) {
             return promise.then(function() {
               return readAllDataPromise(item, context);
             });
           }, Promise.resolve());
-        }
+        };
 
-        function readAllDataPromise(pathItem, data) {
+        const readAllDataPromise = (pathItem, data) => {
           // doing this to try improve performance (allow more parallel read when the order is not important), but no real improvement. Need further measurement. 
           if (pathItem instanceof Array) {
             return Promise.all(pathItem.map(getPathItemReadFn(data)));
@@ -222,17 +221,17 @@
                pathItem.status = 'loaded';
                me.fire('firebase-nest-loaded', pathItem);
             });
-        }
+        };
 
-        function getPathItemReadFn(data) {
+        const getPathItemReadFn= (data) =>{
           me._set_totalCount(me._totalCount || 0 + data.length);
           return function(pathItem) {
             return Promise.all(data.map(getReadFn(pathItem)));
           };
-        }
+        };
 
         // return a function returning a Promise that will read data 
-        function getReadFn(pathItem) {
+        const getReadFn = (pathItem) => {
           
           var db = pathItem.appName ? firebase.app(pathItem.appName).database() : database;
           var key = pathItem.key;
@@ -273,9 +272,9 @@
               return;
             });
           };
-        }
+        };
 
-        function parseBinding(txt, item) {
+        const parseBinding= (txt, item) => {
           var binding = Polymer.Annotations._parseBindings(txt);
           if (!binding) {
             return txt;
@@ -298,7 +297,7 @@
             me._error('cannot compute binding for ', txt);
           }).join('');
 
-        }
+        };
 
         console.time('readData');
         forEachPromise(nestedPath, data)

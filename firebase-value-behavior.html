@@ -7,6 +7,7 @@ https://github.com/firebase/polymerfire/blob/master/LICENSE
 -->
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../polymerfire/firebase-common-behavior.html">
+<link rel="import" href="../polymer/lib/utils/debounce.html">
 <!-- <link rel="import" href="firebase-app-script.html"> -->
 <script>
 'use strict';
@@ -93,10 +94,15 @@ Polymer.firebaseNest.firebaseValueImpl = {
 
 
   debounceFire: function() {
-    this.debounce('firebase-value-debounce', function() {
-      // we fire this as a way to circumvent https://github.com/PolymerElements/paper-dropdown-menu/issues/197
-      this.fire('async-value');
-    }, 300);
+    this._debouncer = Polymer.Debouncer.debounce(this._debouncer,
+      Polymer.Async.timeOut.after(250),
+      () => { 
+        this.dispatchEvent(new CustomEvent('async-value', { bubbles: true, composed: true }));
+       });
+    // this.debounce('firebase-value-debounce', function() {
+    //   // we fire this as a way to circumvent https://github.com/PolymerElements/paper-dropdown-menu/issues/197
+    //   this.fire('async-value');
+    // }, 300);
   }
 
 };

@@ -47,7 +47,7 @@
       if(exists === false) {
         return typeof this.defaultValue === 'undefined' ?  '' : this.defaultValue ;
       }
-      if(exists === null) {
+      if(exists === null || exists === undefined) {
         return this.loadingValue;
       }
       return firebaseData;

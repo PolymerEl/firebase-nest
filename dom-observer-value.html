@@ -1,7 +1,7 @@
 <link rel="import" href="../polymer/polymer.html">
 <!-- <link rel="import" href="firebase-value-behavior.html"> -->
 <!--
-`dom-observer-value` sets data[key] to the valo of htmltext 
+`dom-observer-value` sets data[key] to the value of htmltext 
 -->
 <dom-module id="dom-observer-value">
   <template>
@@ -62,11 +62,6 @@
       }
     },
 
-    behaviors: [
-      // Polymer.firebaseNest.firebaseValue,
-      // Polymer.firebaseNest.domValueBehavior,
-    ],
-
     // observers: [],
 
     // ready: function() {
@@ -97,7 +92,7 @@
 
     attached: function() {
       // this._observer = Polymer.dom(this.$.distributed).observeNodes(this._onNodesChange);
-      this._observer = Polymer.dom(this).observeNodes(this._onNodesChange);
+      // this._observer = Polymer.dom(this).observeNodes(this._onNodesChange);
 
       // we also add mutation Observer as cannot make overveNodes work properly...
       this._mutationObserver = new MutationObserver(mutations => {

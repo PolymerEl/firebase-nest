@@ -31,7 +31,6 @@
         return this._error('missing key');
       }
       if (exists === true) {
-        // console.info('DB CHANGE', data, this.firebaseData);
         // check if firebaseData is primitive - in this case linkPaths will not work !
         this._previousExists = exists;
         if (Object(this.firebaseData) !== this.firebaseData) {
@@ -43,8 +42,6 @@
         }
         this.set('data.' + this.key, this.firebaseData);
         this.linkPaths('firebaseData', 'data.' + this.key);
-        //XXX2.0(cg): this._createMehodObserver() instead
-        // this._addComplexObserverEffect('_observeFirebaseData(firebaseData.*)');
         return this.debounceFire();
 
       }

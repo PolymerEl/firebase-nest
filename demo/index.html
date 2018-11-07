@@ -13,7 +13,6 @@
   <link rel="import" href="../firebase-value.html">
   <link rel="import" href="demo-stringify.html">
   <style is="custom-style" include="demo-pages-shared-styles">
-
   </style>
 </head>
 
@@ -21,32 +20,33 @@
   <div class="vertical-section-container centered">
     <h3>Basic firebase-nest demo</h3>
     <demo-snippet>
-      <template>
-        <template is="dom-bind" id="app">
-          <firebase-app log app="{{app}}" auth-domain="[[authDomain]]" database-url="[[databaseURL]]" api-key="[[apiKey]]">
-          </firebase-app>
-          <firebase-nest log app="[[app]]"  path="/countryList" data="{{data}}">
-            <template is="dom-repeat" items="[[data]]">
-              <firebase-value key="code" app="[[app]]" data="[[item]]" path="/countryNames/[[item.$key]]/country-code"></firebase-value>
-            </template>
-          </firebase-nest>
-          <demo-stringify data="[[data]]"></demo-stringify>
-        </template>
+      <template preserve-content>
+        <dom-bind id="app">
+          <template>
+            <firebase-app log app="{{app}}" auth-domain="[[authDomain]]" database-url="[[databaseURL]]" api-key="[[apiKey]]"></firebase-app>
+            <firebase-nest log app="[[app]]" path="/countryList" data="{{data}}">
+              <template is="dom-repeat" items="{{data}}">
+                <firebase-value key="code" app="[[app]]" data="{{item}}" path="/countryNames/[[item.$key]]/country-code"></firebase-value>
+              </template>
+            </firebase-nest>
+            <demo-stringify data="[[data]]"></demo-stringify>
+          </template>
+        </dom-bind>
+        <script>
+        window.addEventListener('WebComponentsReady', function() {
+          app = document.querySelector('#app');
+          // app.apiKey = 'AIzaSyCtLtt-NT09wdzZz0vxe0X8Fll1lWYrq3g';
+          // app.databaseURL= 'https://sample-dd000.firebaseio.com/'; 
+          // app.authDomain= 'sample-dd000.firebaseapp.com';
+
+          app.apiKey = 'AIzaSyAbLJ5nMHaFS_YXioay8b28RnV43JvoEms';
+          app.databaseURL = 'https://pre-ignition-meta.firebaseio.com/';
+          app.authDomain = 'pre-ignition-meta.firebaseapp.com';
+        });
+        </script>
       </template>
     </demo-snippet>
   </div>
 </body>
-<script>
-window.addEventListener('WebComponentsReady', function() {
-  app = document.querySelector('#app');
-  // app.apiKey = 'AIzaSyCtLtt-NT09wdzZz0vxe0X8Fll1lWYrq3g';
-  // app.databaseURL= 'https://sample-dd000.firebaseio.com/'; 
-  // app.authDomain= 'sample-dd000.firebaseapp.com';
-  
-  app.apiKey = 'AIzaSyAbLJ5nMHaFS_YXioay8b28RnV43JvoEms'; 
-  app.databaseURL= 'https://pre-ignition-meta.firebaseio.com/'; 
-  app.authDomain= 'pre-ignition-meta.firebaseapp.com';
- });
-</script>
 
 </html>
