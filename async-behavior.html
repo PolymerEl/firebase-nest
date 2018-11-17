@@ -33,6 +33,7 @@ Polymer.firebaseNest.async = {
   },
 
   attached: function() {
+    // XXX(cg): 2.0 this might not work with shadowRoot !.
     this.set('__registeredItems', this.querySelectorAll('*[async-value]'));
   },
 

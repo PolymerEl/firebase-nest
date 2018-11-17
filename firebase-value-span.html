@@ -11,6 +11,11 @@
       display: inline;
     }
 
+    :host::before, :host::after {
+      content: " ";
+      display: inline-block;
+    }
+
     </style>
     <firebase-document log="[[log]]" exists="{{exists}}" data="{{firebaseData}}" path="[[path]]" disabled="[[disabled]]" app="[[app]]" app-name="[[appName]]"></firebase-document>
     [[displayValue]]

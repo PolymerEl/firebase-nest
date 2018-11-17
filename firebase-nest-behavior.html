@@ -23,8 +23,7 @@ https://github.com/firebase/polymerfire/blob/master/LICENSE
        * specified child key.
        */
       orderByChild: {
-        type: String,
-        value: ''
+        type: String
       },
 
       /**
@@ -32,8 +31,17 @@ https://github.com/firebase/polymerfire/blob/master/LICENSE
        * against data structures such as `{a: 1, b: 2, c: 3}`.
        */
       orderByValue: {
-        type: Boolean,
-        value: false
+        type: Boolean
+        // value: false
+      },
+
+      /**
+       * Order this query by values. This is only applicable to leaf node queries
+       * against data structures such as `{a: 1, b: 2, c: 3}`.
+       */
+      orderByKey: {
+        type: Boolean
+        // value: false
       },
 
       /**
@@ -78,8 +86,8 @@ https://github.com/firebase/polymerfire/blob/master/LICENSE
        * number of children.
        */
       limitToFirst: {
-        type: Number,
-        value: 0
+        type: Number
+        // value: 0
       },
 
       /**
@@ -89,8 +97,8 @@ https://github.com/firebase/polymerfire/blob/master/LICENSE
        * number of children.
        */
       limitToLast: {
-        type: Number,
-        value: 0
+        type: Number
+        // value: 0
       }
     }
 
