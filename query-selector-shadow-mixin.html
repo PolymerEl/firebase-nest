@@ -1,0 +1,40 @@
+<script src="node_modules/query-selector-shadow-dom/dist/querySelectorShadowDom.js"></script>
+<script>
+(function(){
+	
+	/**
+	 * ##  QuerySelectorShadowDom
+	 * 
+	 * querySelector that can pierce Shadow DOM roots without knowing the path through nested shadow roots. 
+	 * 
+	 * @memberof PolymerEl.mixin
+   * @polymer
+   * @mixinFunction
+   */
+	const QuerySelectorShadowDom = superClass => {
+	  
+	  return class extends superClass {
+	  	querySelectorAllDeep(selector) {
+	  		return querySelectorShadowDom.querySelectorAllDeep(selector);
+	  	} 
+	  	querySelectorDeep(selector) {
+	  		return querySelectorShadowDom.querySelectorDeep(selector);
+	  	}
+	  };
+	};
+
+	if (!window.PolymerEl) {
+	 window.PolymerEl = {};
+	}
+
+	/* 
+	 * @namespace MultiChart.mixin
+	 */
+	window.PolymerEl.mixin = window.PolymerEl.mixin || {};
+	/* 
+	 * @mixinFunction
+	 */
+  window.PolymerEl.mixin.QuerySelectorShadowDom = QuerySelectorShadowDom;
+
+	})();	
+</script>

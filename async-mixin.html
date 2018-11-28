@@ -1,0 +1,79 @@
+<link rel="import" href="query-selector-shadow-mixin.html">
+<script>
+(function() {
+
+  /**
+   * ## Async
+   * 
+   *  Util mixin to circumvent https://github.com/PolymerElements/paper-dropdown-menu/issues/197
+   *  We listen to `async-value` event and re-set all elements having `[async-value]` attribute
+   * 
+   *  Since we use shadowRoot, this mixin is dependend on https://www.npmjs.com/package/query-selector-shadow-dom
+   * 
+   * @memberof PolymerEl.mixin
+   * @polymer
+   * @mixinFunction
+   */
+  const Async = Polymer.dedupingMixin(superClass => {
+
+    /*
+     * @polymer
+     * @mixinClass
+     */
+    class Mixin extends
+    PolymerEl.mixin.QuerySelectorShadowDom(superClass) {
+
+      static get properties() {
+        return {
+          
+          /**
+           * `__registeredItems` array of items that need to be re-synched
+           */
+          __registeredItems: {
+            type: Array
+          }
+
+        };
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+        this.set('__registeredItems', this.querySelectorAllDeep('*[async-value]'));
+        Polymer.RenderStatus.afterNextRender(this, () => {
+          this.addEventListener('async-value', this.resetAsync);
+        });
+      }
+
+      disconnectedCallback() {
+        super.disconnectedCallback();
+        this.set('__registeredItems', []);
+      }
+
+      resetAsync(e) {
+        e.stopPropagation();
+        this.__registeredItems.forEach(item => {
+          if (item && item.selectedItem && item._selectedItemChanged) {
+            item._selectedItemChanged(item.selectedItem);
+          }
+        });
+      }
+    }
+
+    return Mixin;
+  });
+
+  if (!window.PolymerEl) {
+    window.PolymerEl = {};
+  }
+  /* 
+   * @namespace MultiChart.mixin
+   */
+  window.PolymerEl.mixin = window.PolymerEl.mixin || {};
+  /* 
+   * @mixinClass
+   */
+  window.PolymerEl.mixin.Async = Async;
+
+})();
+
+</script>

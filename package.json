@@ -1,0 +1,29 @@
+{
+  "name": "firebase-nest",
+  "version": "2.1.0",
+  "description": "polymerfire based util to construct firebase lookup datastructure",
+  "main": "index.html",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/PolymerEl/firebase-nest.git"
+  },
+  "keywords": [
+    "firebase",
+    "lookup"
+  ],
+  "author": "christophe.geiser@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/PolymerEl/firebase-nest/issues"
+  },
+  "homepage": "https://github.com/PolymerEl/firebase-nest#readme",
+  "dependencies": {
+    "query-selector-shadow-dom": "*"
+  }
+}
