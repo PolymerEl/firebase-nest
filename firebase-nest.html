@@ -88,8 +88,8 @@
        */
       exists: {
         type: Boolean,
-        notify: true,
-        readOnly: true
+        notify: true
+        // readOnly: true
       },
 
       /* 
@@ -159,7 +159,7 @@
     },
 
     observers: [
-      '_observeNestedPath(data, nestedPath, nestedPath.*)'
+      '_observeNestedPath(data, nestedPath.*)'
     ],
 
     attached: function() {
@@ -276,7 +276,7 @@
         };
 
         const parseBinding= (txt, item) => {
-          var binding = Polymer.Annotations._parseBindings(txt);
+          const binding = Polymer.Element._parseBindings(txt);
           if (!binding) {
             return txt;
           }
@@ -284,14 +284,9 @@
             if (b.literal) {
               return b.literal;
             }
-            var value;
-            var bind = b.value;
-            // if (bind && (value = me.get(bind, me.dataHost))) {
-            //   return value;
-            // }
-            // we need to remove potential item. (e.g. in [[item.key]]) 
-            // bind = bind.startsWith('item.') ? bind.substr(5) : bind;
-            if (b.value && (value = me.get(bind, item))) {
+            let value;
+            const source = b.source;
+            if (source && (value = me.get(source, item))) {
               return value;
             }
 

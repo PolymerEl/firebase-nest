@@ -24,6 +24,6 @@
   },
   "homepage": "https://github.com/PolymerEl/firebase-nest#readme",
   "dependencies": {
-    "query-selector-shadow-dom": "*"
+    "query-selector-shadow-dom": "^0.3.2"
   }
 }

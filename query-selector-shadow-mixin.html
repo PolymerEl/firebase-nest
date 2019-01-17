@@ -1,4 +1,5 @@
 <script src="node_modules/query-selector-shadow-dom/dist/querySelectorShadowDom.js"></script>
+<!-- <script src="node_modules/query-selector-shadow-dom/src/querySelectorDeep.js"></script> -->
 <script>
 (function(){
 	
@@ -15,10 +16,10 @@
 	  
 	  return class extends superClass {
 	  	querySelectorAllDeep(selector) {
-	  		return querySelectorShadowDom.querySelectorAllDeep(selector);
+	  		return querySelectorShadowDom.querySelectorAllDeep(selector, this);
 	  	} 
 	  	querySelectorDeep(selector) {
-	  		return querySelectorShadowDom.querySelectorDeep(selector);
+	  		return querySelectorShadowDom.querySelectorDeep(selector, this);
 	  	}
 	  };
 	};
