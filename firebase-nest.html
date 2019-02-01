@@ -89,7 +89,6 @@
       exists: {
         type: Boolean,
         notify: true
-        // readOnly: true
       },
 
       /* 
@@ -216,31 +215,37 @@
           me._set_totalCount(me._totalCount || 0 + data.length);
           pathItem.status = 'loading';
           me.fire('firebase-nest-loading', pathItem);
-          
-          return Promise.all(data.map(getReadFn(pathItem)))
+          const db = pathItem.appName ? firebase.app(pathItem.appName).database() : database;
+          return Promise.all(data.map(getReadFn(pathItem, db)))
             .then(() => {
                pathItem.status = 'loaded';
                me.fire('firebase-nest-loaded', pathItem);
             });
         };
-
         const getPathItemReadFn= (data) =>{
           me._set_totalCount(me._totalCount || 0 + data.length);
           return function(pathItem) {
-            return Promise.all(data.map(getReadFn(pathItem)));
+            const db = pathItem.appName ? firebase.app(pathItem.appName).database() : database;
+            return Promise.all(data.map(getReadFn(pathItem, db)));
           };
         };
 
         // return a function returning a Promise that will read data 
-        const getReadFn = (pathItem) => {
-          
-          var db = pathItem.appName ? firebase.app(pathItem.appName).database() : database;
-          var key = pathItem.key;
-          var defaultValue = pathItem.defaultValue;
-          var defaultIsObject = Object(defaultValue ) === defaultValue ;
+        const getReadFn = (pathItem, db) => {
+
+          const key = pathItem.key;
+          const defaultValue = pathItem.defaultValue;
+          const defaultIsObject = Object(defaultValue ) === defaultValue ;
 
           return function(item) {
-            var ref = db.ref(parseBinding(pathItem.path, item));
+            const path = parseBinding(pathItem.path, item);
+            
+            if(!path) {
+              item[key] = defaultValue;
+              return null; 
+            }
+            
+            const ref = db.ref(path);
             return ref.once('value').then(function(snap) {
                 let val = snap.val() ;
                 if (Object(val) === val || defaultIsObject) {
@@ -257,6 +262,8 @@
                   if (!key) {
                     me._error('primitive value need a key');
                   }
+
+                  // Note(cg): val would be undefined without defaultValue.
                   val = val || defaultValue;
                   // Note(cg): we only assign value to item if the read return smth 
                   // this allows to override sometimes override values. 
@@ -280,19 +287,21 @@
           if (!binding) {
             return txt;
           }
-          return binding.map(function(b) {
+          let error;
+          const ret = binding.map(function(b) {
             if (b.literal) {
               return b.literal;
             }
             let value;
             const source = b.source;
-            if (source && (value = me.get(source, item))) {
+            if (source && (value = me.get(source, item)) || value === '') {
               return value;
             }
-
-            me._error('cannot compute binding for ', txt);
+            error = true;
+            console.warn('cannot compute binding for ', txt);
           }).join('');
 
+          return error ? null: ret;
         };
 
         console.time('readData');
