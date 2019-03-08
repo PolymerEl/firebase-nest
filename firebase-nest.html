@@ -340,6 +340,18 @@
           console.error(e);
         });
       }
+      if (this.data && !this.data.length && this.nestedPath && !this.isHardResetting) {
+        // Note(cg): handle empty dataset.
+        this._reset();
+      }
+    },
+
+    _reset: function() {
+      this._setLoading(true);
+      this._set_loadedCount(0);
+      this.isHardResetting = false;
+      this._setLoading(false);
+      this.fire('async-value');
     },
 
     _dataSource: function(opts, cb) {
