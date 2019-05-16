@@ -20,7 +20,9 @@
   "dependencies": {
     "polymer": "Polymer/polymer#^2.0.0",
     "polymerfire": "^2.2.0",
-    "app-storage": "PolymerElements/app-storage#^2.0.0"
+    "app-storage": "PolymerElements/app-storage#^2.0.0",
+    "query-selector-shadow-dom": "PolymerEl/query-selector-shadow-dom#^0"
+
   },
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#^3.0.0",

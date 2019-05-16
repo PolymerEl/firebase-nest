@@ -1,4 +1,4 @@
-<link rel="import" href="query-selector-shadow-mixin.html">
+<link rel="import" href="../query-selector-shadow-dom/query-selector-shadow-mixin.html">
 <script>
 (function() {
 
@@ -38,10 +38,14 @@
 
       connectedCallback() {
         super.connectedCallback();
-        this.set('__registeredItems', this.querySelectorAllDeep('*[async-value]'));
+        this.setAsync();
         Polymer.RenderStatus.afterNextRender(this, () => {
           this.addEventListener('async-value', this.resetAsync);
         });
+      }
+
+      setAsync() {
+        this.set('__registeredItems', this.querySelectorAllDeep('*[async-value]'));
       }
 
       disconnectedCallback() {

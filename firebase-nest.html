@@ -152,6 +152,14 @@
         notify: true
       },
 
+      /*
+       * `performance` an instance of firebase.performance()
+       * when set, will monitor performance of this component
+       */
+       performance: {
+         type: Object
+        },
+
     },
 
     listeners: {
@@ -173,14 +181,14 @@
     },
 
     _observeLoadedCount: function() {
-      this.debounce('firebase-nest-calc-percent', this._doCalcPercent, 10);
+      this.debounce('firebase-nest-calc-percent', this._doCalcPercent, 20);
     },
 
     _doCalcPercent: function() {
-      if (this._totalCount === 0) {
+      if (!this._totalCount ) {
         return this._setPercentLoaded(0);
       }
-      this._setPercentLoaded(this._loadedCount / this._totalCount * 100);
+      this._setPercentLoaded(this._loadedCount / this._totalCount * 100 / this.nestedPath.length);
     },
 
     _doNest: function() {
@@ -304,11 +312,19 @@
           return error ? null: ret;
         };
 
-        console.time('readData');
+        let trace;
+        if (me.performance) {
+          console.time('readData');
+          trace = me.performance.init('loadNestedData');
+        }
         forEachPromise(nestedPath, data)
           .then(() => {
-            console.timeEnd('readData');
-            console.log('Data: ', me.data);
+            if(me.performance) {
+              console.timeEnd('readData');
+              console.log('Data: ', me.data);
+              trace.incrementMetric('dataLength', me.data.length);
+              trace.stop();
+            }
             
             var data = me.data;
             if(data.length) {
