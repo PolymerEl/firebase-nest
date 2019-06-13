@@ -1,0 +1,82 @@
+<link rel="import" href="../../polymer/polymer.html">
+<dom-module id="demo-linkpath">
+  <script>
+  (function() {
+
+    /**
+     * ## DemoLinkpath
+     *
+     * `<demo-linkpath>` testing link path
+     *
+     * @memberof PolymerEl
+     * @customElement
+     * @polymer
+     * @demo
+     **/
+    class DemoLinkpath extends Polymer.Element {
+
+      static get is() {
+        return 'demo-linkpath';
+      }
+
+      static get properties() {
+        return {
+          base: {
+            type: Object,
+            notify: true,
+            // value: () =>{ return {root: {message: 'hello'}}}
+            value: () =>{ return {message: 'hello'}}
+          },
+          data: {
+            type: Object,
+            notify: true,
+            value: () =>{ return {country: {}}}
+          }
+        };
+      }
+
+      static get observers() {
+        return [
+          '_changed(data.*)'
+        ];
+      }
+      connectedCallback() {
+        super.connectedCallback();
+        // this.base = {
+        //   message: 'first linking'
+        // };
+        if(!this.data) {
+          this.data = {};
+
+        this.data.country = this.base;
+        this.notifyPath('data.country');
+        this.linkPaths('data.country', 'base');
+        // this.set('base.message', 'deep linking works');
+        // we don't get a console print for the following change:
+        // this.set('base', {
+        //   message: 'changing base object doesn\'t work'
+        // });
+        }
+
+      }
+      
+      _changed(changeRecord) {
+        console.log(changeRecord.base, changeRecord.path);
+      }
+    }
+
+    customElements.define(DemoLinkpath.is, DemoLinkpath);
+
+    if (!window.PolymerEl) {
+      window.PolymerEl = {};
+    }
+
+    /* 
+     * @namespace MultiChart
+     */
+    window.PolymerEl.DemoLinkpath = DemoLinkpath;
+
+  })();
+
+  </script>
+</dom-module>

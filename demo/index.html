@@ -7,16 +7,43 @@
   <title>firebase-nest demo</title>
   <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
   <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+  <link rel="import" href="../../paper-input/paper-input.html">
   <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
   <link rel="import" href="../../polymerfire/firebase-app.html">
   <link rel="import" href="../firebase-nest.html">
   <link rel="import" href="../firebase-value.html">
   <link rel="import" href="demo-stringify.html">
+  <link rel="import" href="demo-linkpath.html">
   <style is="custom-style" include="demo-pages-shared-styles">
   </style>
 </head>
 
 <body>
+   <div class="vertical-section-container centered">
+    <h3>Basic linkpath demo</h3>
+    <demo-snippet>
+      <template preserve-content>
+        <dom-bind id="app1">
+          <template>
+             <template is="dom-repeat" items="{{items}}">
+                <paper-input label="base.test" value ="{{item.base.test}}"> </paper-input>
+                <paper-input label="base.message" value ="{{item.base.message}}"> </paper-input>
+                <paper-input label="data.country.message" value ="{{item.data.country.message}}"> </paper-input>
+                <demo-linkpath base="{{item.base}}" data="{{item.data}}"></demo-linkpath>
+                <demo-stringify name="base" data="[[item.base]]"></demo-stringify>
+                <demo-stringify name="data" data="[[item.data]]"></demo-stringify>
+          </template>
+          </template>
+        </dom-bind>
+        <script>
+        window.addEventListener('WebComponentsReady', function() {
+          app1 = document.querySelector('#app1');
+          app1.items = [{base: {message: "1"}}, {base: {message: "2"}}]
+        });
+        </script>
+      </template>
+    </demo-snippet>
+  </div>
   <div class="vertical-section-container centered">
     <h3>Basic firebase-nest demo</h3>
     <demo-snippet>
@@ -24,21 +51,29 @@
         <dom-bind id="app">
           <template>
             <firebase-app log app="{{app}}" auth-domain="[[authDomain]]" database-url="[[databaseURL]]" api-key="[[apiKey]]"></firebase-app>
-            <firebase-nest log app="[[app]]" path="/countryList" data="{{data}}">
-              <template is="dom-repeat" items="{{data}}">
-                <firebase-value key="code" app="[[app]]" data="{{item}}" path="/countryNames/[[item.$key]]/country-code"></firebase-value>
+            <!-- <firebase-query app="[[app]]" path="/countryList" data="{{data}}"></firebase-query> -->
+            <!-- <firebase-nest app="[[app]]" path="/countryList" data="{{data}}"> -->
+              <template is="dom-repeat" items="{{items}}">
+                <div>
+                  <firebase-value log key="country" app="[[app]]" data="{{item}}" path="/countryNames/[[item.$key]]"></firebase-value>
+                  <paper-input label="name" value ="{{item.country.name}}"> </paper-input>
+                  <p>[[item.$key]] - [[item.country.name]]</p>
+                </div>
+                <!-- <firebase-value key="code" app="[[app]]" data="{{item}}" path="/countryNames/[[item.$key]]/country-code"></firebase-value> -->
               </template>
-            </firebase-nest>
-            <demo-stringify data="[[data]]"></demo-stringify>
+            <!-- </firebase-nest> -->
+            <demo-stringify data="[[items]]"></demo-stringify>
           </template>
         </dom-bind>
         <script>
         window.addEventListener('WebComponentsReady', function() {
           app = document.querySelector('#app');
+          // app.item = {$key: 'BGD', name: 'bbb'}
           // app.apiKey = 'AIzaSyCtLtt-NT09wdzZz0vxe0X8Fll1lWYrq3g';
           // app.databaseURL= 'https://sample-dd000.firebaseio.com/'; 
           // app.authDomain= 'sample-dd000.firebaseapp.com';
-
+          // app.items = [{$key: 'BGD', name: 'bbb'}, {$key: 'UGA', name: 'UGA'}]
+          app.items = [{$key: 'BGD', name: 'bbb'}]
           app.apiKey = 'AIzaSyAbLJ5nMHaFS_YXioay8b28RnV43JvoEms';
           app.databaseURL = 'https://pre-ignition-meta.firebaseio.com/';
           app.authDomain = 'pre-ignition-meta.firebaseapp.com';

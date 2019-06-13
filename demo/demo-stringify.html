@@ -10,9 +10,13 @@
     :host {
       display: block;
     }
+    code {
+      font-size: 10px;
+      white-space: pre;
+    }
     </style>
     <div>
-      <p>data: <code>[[stringify(data.*)]]</code></p>
+      <p>[[name]]: <code>[[stringify(data.*)]]</code></p>
     </div>
   </template>
   <script>
@@ -27,13 +31,18 @@
        * The data to returned by firebase-query.
        */
       data: {
+        type: Object
+      },
 
+      name: {
+        type: String,
+        value: 'data'
       }
       
     },
 
     stringify: function() {
-      return JSON.stringify(this.data);
+      return JSON.stringify(this.data, null, 2);
     }
 
   });
