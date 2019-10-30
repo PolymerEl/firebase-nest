@@ -23,7 +23,6 @@
     exists="{{exists}}"
     disabled="[[disabled]]" 
     path="[[path]]" 
-    log="[[log]]" 
     app="[[app]]" 
     app-name="[[appName]]"></firebase-query>
     <slot></slot>
@@ -365,6 +364,7 @@
     _reset: function() {
       this._setLoading(true);
       this._set_loadedCount(0);
+      this._set_totalCount(0);
       this.isHardResetting = false;
       this._setLoading(false);
       this.fire('async-value');

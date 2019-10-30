@@ -38,8 +38,8 @@
 
       connectedCallback() {
         super.connectedCallback();
-        this.setAsync();
         Polymer.RenderStatus.afterNextRender(this, () => {
+          this.setAsync();
           this.addEventListener('async-value', this.resetAsync);
         });
       }

@@ -7,11 +7,12 @@
 <dom-module id="firebase-value-span">
   <template>
     <style>
-     :host {
+    :host {
       display: inline;
     }
 
-    :host::before, :host::after {
+    :host::before,
+    :host::after {
       content: " ";
       display: inline-block;
     }
@@ -35,27 +36,34 @@
        */
       displayValue: {
         type: String,
-        computed: '_computeDisplayValue(exists, firebaseData)'
+        computed: '_computeDisplayValue(exists, firebaseData, maxlength)'
       },
 
       loadingValue: {
         type: String,
         value: '...'
-      }
+      },
+
+      /*
+       * `maxlength` if set, will substring value
+       */
+      maxlength: {
+        type: Number,
+      },
     },
 
     observers: [
       // '_observeData(exists, defaultValue)'
     ],
 
-    _computeDisplayValue: function(exists, firebaseData) {
-      if(exists === false) {
-        return typeof this.defaultValue === 'undefined' ?  '' : this.defaultValue ;
-      }
-      if(exists === null || exists === undefined) {
-        return this.loadingValue;
-      }
-      return firebaseData;
+    _computeDisplayValue: function(exists, firebaseData, maxlength) {
+      const defaultValue = this.defaultValue || this.defaultValue === 0 ? this.defaultValue : '';
+      const str = exists === false ?
+        defaultValue :
+        (exists === null || exists === undefined) ?
+        this.loadingValue :
+        this.firebaseData;
+      return str && maxlength && str.length > maxlength ? (str.substring(0, len) + ' ...') : str;
     }
 
   });

@@ -20,17 +20,18 @@
 
     observers: [
       '_observeExistsChange(data, exists)',
-      '_observeFirebasePrimitiveChange(firebaseData, data)'
+      // '_observeFirebasePrimitiveChange(firebaseData, data)'
       // '_temp(firebaseData.*)'
     ],
 
     detached: function() {
-      this.unlinkPaths('firebaseData');
+      // this.unlinkPaths('firebaseData');
+      this.unlinkPaths(`data.${this.key}`, 'firebaseData');
     },
 
-    // _temp: function(changed) {
-    //   console.info(changed)
-    // },
+    attached: function() {
+      this.linkPaths(`data.${this.key}`, 'firebaseData');
+    },
 
     _observeExistsChange: function(data, exists) {
       if (!this.key) {
@@ -46,14 +47,14 @@
           this.debounceFire();
           return;
         }
-        // this.set('data.' + this.key, this.firebaseData);
+        this.set('data.' + this.key, this.firebaseData);
         // this.data[this.key] = this.firebaseData;
         // this.notifyPath(`data.${this.key}`);
         // Object.keys(this.firebaseData).forEach(k => {
         //   this.linkPaths(`data.${this.key}.${k}`, `firebaseData.${k}`);
         // })
         // this.linkPaths(`data.${this.key}`, 'firebaseData');
-        this.linkPaths(`data.${this.key}`, 'firebaseData');
+        // this.linkPaths(`data.${this.key}`, 'firebaseData');
         // this.debounceFire();
         return
 
@@ -83,8 +84,12 @@
      * @protected
      */
     _shouldPropertyChange: function(property, value, old) {
-
+      
       if (property.startsWith('firebaseData.') && old) {
+        if (this[`__changing${property}`]) {
+          return false
+        }
+        this[`__changing${property}`] = true;
         // Note(cg): makes sure data reflects firebase value, without notifying anyone.
         // this is hacky but prevents that changes on bountPath are propagated twice 
         // leading to value not being updated
@@ -101,10 +106,29 @@
 
       // Note(cg): changes happening at base level are not caught in linked-paths.
       if (property === 'firebaseData') {
-        this.set('data.' + this.key, value);
+        if (this[`__changing${property}`]) {
+          return false
+        }
+        this[`__changing${property}`] = true;
+        // Note(cg): primitive data.
+        if ((value !== undefined) && Object(value) !== value) {
+          this.set('data.' + this.key, value);
+        }
+        else if (Object.keys(value).length > 0) {
+          this.set('data.' + this.key, value);
+        }
+        else if(this.defaultValue !== undefined) {
+           this.set('data.' + this.key, this.defaultValue);
+        }
         this.debounceFire();
       }
 
+      // Note(cg): primitive linkpath does not work 
+      if ((this._isPrimitive || this.exists === false) && (property === `data.${this.key}`) && value !== this.defaultValue) {
+        this.set('firebaseData' , value);
+      }
+
+      delete this[`__changing${property}`];
       return (
         // Strict equality check
         (old !== value &&
@@ -113,13 +137,13 @@
       );
     },
 
-    _observeFirebasePrimitiveChange: function(firebaseData, data) {
-      // XXX(cg): we need a similar mechanism event if not primitive. 
-      if (this._isPrimitive && this.exists) {
-        this.set('data.' + this.key, this.firebaseData);
-        this.debounceFire();
-      }
-    }
+    // _observeFirebasePrimitiveChange: function(firebaseData, data) {
+    //   // XXX(cg): we need a similar mechanism event if not primitive. 
+    //   if (this._isPrimitive && this.exists) {
+    //     this.set('data.' + this.key, this.firebaseData);
+    //     this.debounceFire();
+    //   }
+    // }
 
   });
 
