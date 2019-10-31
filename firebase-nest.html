@@ -42,7 +42,8 @@
        * Path to a Firebase root or endpoint. N.B. `path` is case sensitive.
        */
       path: {
-        type: String
+        type: String,
+        observer: '_observePath'
       },
 
       /**
@@ -177,6 +178,12 @@
     _observeNestedPath: function() {
       if(this.isHardResetting) {return;}
       this.debounce('firebase-nest-do-nest', this._doNest, 50);
+    },
+    
+    _observePath: function(path, old) {
+      if(path && old) {
+        this._reset();
+      }
     },
 
     _observeLoadedCount: function() {
