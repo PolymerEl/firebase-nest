@@ -6,7 +6,7 @@
 -->
 <dom-module id="firebase-value">
   <template>
-    <firebase-document log="[[log]]" exists="{{exists}}" data="{{firebaseData}}" path="[[path]]" disabled="[[disabled]]" app="[[app]]" app-name="[[appName]]"></firebase-document>
+    <firebase-document log="[[log]]"  data="{{firebaseData}}" path="[[path]]" app="[[app]]" app-name="[[appName]]"></firebase-document>
   </template>
   <script>
   Polymer({
@@ -19,51 +19,79 @@
     ],
 
     observers: [
-      '_observeExistsChange(data, exists)',
+      '_observeRemote(firebaseData.*, firebaseData)',
+      '_observeData(data.*)',
+      // '_observeExistsChange(data, exists)',
       // '_observeFirebasePrimitiveChange(firebaseData, data)'
       // '_temp(firebaseData.*)'
     ],
 
-    detached: function() {
-      // this.unlinkPaths('firebaseData');
-      this.unlinkPaths(`data.${this.key}`, 'firebaseData');
+    _observeData(changedData) {
+      const path = changedData.path.substring(5);
+      if((path === this.key) && (changedData.value !== this.firebaseData) && (changedData.value !== this.defaultValue)) {
+        console.info('changedData', changedData)
+        this.firebaseData = changedData.value;
+      }
     },
 
-    attached: function() {
-      this.linkPaths(`data.${this.key}`, 'firebaseData');
-    },
-
-    _observeExistsChange: function(data, exists) {
+    _observeRemote(changedData) {
+      if(this.firebaseData === undefined) {
+        return;
+      }
       if (!this.key) {
-        return this._error('missing key');
+        throw new Error('missing key')
       }
-      if (exists === true) {
-        // check if firebaseData is primitive - in this case linkPaths will not work !
-        this._previousExists = exists;
-        if (Object(this.firebaseData) !== this.firebaseData) {
-          this.unlinkPaths('firebaseData');
-          this._set_isPrimitive(true);
-          this.set('data.' + this.key, this.firebaseData);
-          this.debounceFire();
-          return;
-        }
-        this.set('data.' + this.key, this.firebaseData);
-        // this.data[this.key] = this.firebaseData;
-        // this.notifyPath(`data.${this.key}`);
-        // Object.keys(this.firebaseData).forEach(k => {
-        //   this.linkPaths(`data.${this.key}.${k}`, `firebaseData.${k}`);
-        // })
-        // this.linkPaths(`data.${this.key}`, 'firebaseData');
-        // this.linkPaths(`data.${this.key}`, 'firebaseData');
-        // this.debounceFire();
-        return
 
-      }
-      if ((exists === false || this._previousExists) && (this.defaultValue !== undefined)) {
-        this._previousExists = exists;
-        return this.set('data.' + this.key, this.defaultValue);
-      }
+      this._debounceChange = Polymer.Debouncer.debounce(
+        this._debounceChange,
+        Polymer.Async.timeOut.after(20),
+        () => {
+          if ((Object(this.firebaseData) === this.firebaseData) && !Object.keys(this.firebaseData).length) {
+            // Note(cg): emptyData.
+            if(this.defaultValue !== undefined) {
+              // console.info('setting defaultValue', this.$key, this.defaultValue)
+              this.set(`data.${this.key}`, this.defaultValue);
+            }
+            return; 
+          }
+          // console.info('setting VALUE', this.key, JSON.stringify(this.firebaseData))
+          this.debounceFire();
+          return this.set(`data.${this.key}`, this.firebaseData);
+        });
     },
+
+    // detached: function() {
+    //   this.unlinkPaths(`data.${this.key}`, 'firebaseData');
+    // },
+
+    // attached: function() {
+    //   this.linkPaths(`data.${this.key}`, 'firebaseData');
+    // },
+
+    // ___observeExistsChange: function(data, exists) {
+    //   if (!this.key) {
+    //     return this._error('missing key');
+    //   }
+    //   if (exists === true) {
+    //     // check if firebaseData is primitive - in this case linkPaths will not work !
+    //     this._previousExists = exists;
+    //     if (Object(this.firebaseData) !== this.firebaseData) {
+    //       this.unlinkPaths('firebaseData');
+    //       this._set_isPrimitive(true);
+    //       this.set('data.' + this.key, this.firebaseData);
+    //       this.debounceFire();
+    //       return;
+    //     }
+    //     this.set('data.' + this.key, this.firebaseData);
+       
+    //     return
+
+    //   }
+    //   if ((exists === false || this._previousExists) && (this.defaultValue !== undefined)) {
+    //     this._previousExists = exists;
+    //     return this.set('data.' + this.key, this.defaultValue);
+    //   }
+    // },
 
     /**
      * Method called to determine whether a property value should be
@@ -83,59 +111,56 @@
      *   and enqueue a `_proeprtiesChanged` callback
      * @protected
      */
-    _shouldPropertyChange: function(property, value, old) {
-      
-      if (property.startsWith('firebaseData.') && old) {
-        if (this[`__changing${property}`]) {
-          return false
-        }
-        this[`__changing${property}`] = true;
-        // Note(cg): makes sure data reflects firebase value, without notifying anyone.
-        // this is hacky but prevents that changes on boundPath are propagated twice 
-        // leading to value not being updated
-        // https://gitlab.furqansoftware.net/preignition/preignition/issues/1062
+    // ___shouldPropertyChange: function(property, value, old) {
 
-        if (Polymer.Path.isPath(this.key)) {
-          this.set('data.' + this.key, this.firebaseData);
-        }
-        else {
-          this.data[this.key] = this.firebaseData;
-        }
-        return false
-      };
+    //   if (property.startsWith('firebaseData.') && old) {
+    //     if (this[`__changing${property}`]) {
+    //       return false
+    //     }
+    //     this[`__changing${property}`] = true;
+    //     // Note(cg): makes sure data reflects firebase value, without notifying anyone.
+    //     // this is hacky but prevents that changes on boundPath are propagated twice 
+    //     // leading to value not being updated
+    //     // https://gitlab.furqansoftware.net/preignition/preignition/issues/1062
 
-      // Note(cg): changes happening at base level are not caught in linked-paths.
-      if (property === 'firebaseData') {
-        if (this[`__changing${property}`]) {
-          return false
-        }
-        this[`__changing${property}`] = true;
-        // Note(cg): primitive data.
-        if ((value !== undefined) && Object(value) !== value) {
-          this.set('data.' + this.key, value);
-        }
-        else if (Object.keys(value).length > 0) {
-          this.set('data.' + this.key, value);
-        }
-        else if(this.defaultValue !== undefined) {
-           this.set('data.' + this.key, this.defaultValue);
-        }
-        this.debounceFire();
-      }
+    //     if (Polymer.Path.isPath(this.key)) {
+    //       this.set('data.' + this.key, this.firebaseData);
+    //     } else {
+    //       this.data[this.key] = this.firebaseData;
+    //     }
+    //     return false
+    //   };
 
-      // Note(cg): primitive linkpath does not work 
-      if ((this._isPrimitive || this.exists === false) && (property === `data.${this.key}`) && value !== this.defaultValue) {
-        this.set('firebaseData' , value);
-      }
+    //   // Note(cg): changes happening at base level are not caught in linked-paths.
+    //   if (property === 'firebaseData') {
+    //     if (this[`__changing${property}`]) {
+    //       return false
+    //     }
+    //     this[`__changing${property}`] = true;
+    //     // Note(cg): primitive data.
+    //     if ((value !== undefined) && Object(value) !== value) {
+    //       this.set('data.' + this.key, value);
+    //     } else if (Object.keys(value).length > 0) {
+    //       this.set('data.' + this.key, value);
+    //     } else if (this.defaultValue !== undefined) {
+    //       this.set('data.' + this.key, this.defaultValue);
+    //     }
+    //     this.debounceFire();
+    //   }
 
-      delete this[`__changing${property}`];
-      return (
-        // Strict equality check
-        (old !== value &&
-          // This ensures (old==NaN, value==NaN) always returns false
-          (old === old || value === value))
-      );
-    },
+    //   // Note(cg): primitive linkpath does not work 
+    //   if ((this._isPrimitive || this.exists === false) && (property === `data.${this.key}`) && value !== this.defaultValue) {
+    //     this.set('firebaseData', value);
+    //   }
+
+    //   delete this[`__changing${property}`];
+    //   return (
+    //     // Strict equality check
+    //     (old !== value &&
+    //       // This ensures (old==NaN, value==NaN) always returns false
+    //       (old === old || value === value))
+    //   );
+    // },
 
     // _observeFirebasePrimitiveChange: function(firebaseData, data) {
     //   // XXX(cg): we need a similar mechanism event if not primitive. 
