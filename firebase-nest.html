@@ -321,7 +321,7 @@
         let trace;
         if (me.performance) {
           console.time('readData');
-          trace = me.performance.init('loadNestedData');
+          trace = me.performance.init(this.traceId || 'loadNestedData');
         }
         forEachPromise(nestedPath, data)
           .then(() => {

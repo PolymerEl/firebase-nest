@@ -20,16 +20,22 @@
 
     observers: [
       '_observeRemote(firebaseData.*, firebaseData)',
-      '_observeData(data.*)',
-      // '_observeExistsChange(data, exists)',
-      // '_observeFirebasePrimitiveChange(firebaseData, data)'
-      // '_temp(firebaseData.*)'
+      '_observeData(data.*)'
     ],
 
     _observeData(changedData) {
+      if (changedData.path === 'data' && !this.isEmpty(this.firebaseData) && this.key) {
+        // Note(cg): data reset, for instance new dataProvider on a tree grid.
+          this.debounceFire();
+          this.set(`data.${this.key}`, this.firebaseData);
+          this.notifyPath(`data.${this.key}`);
+          return;
+      }
       const path = changedData.path.substring(5);
-      if((path === this.key) && (changedData.value !== this.firebaseData) && (changedData.value !== this.defaultValue)) {
-        console.info('changedData', changedData)
+      if((path === this.key) 
+          && (changedData.value !== this.firebaseData) 
+          && (changedData.value !== this.defaultValue)) {
+        // console.info('changedData', changedData)
         this.firebaseData = changedData.value;
       }
     },
@@ -46,20 +52,24 @@
         this._debounceChange,
         Polymer.Async.timeOut.after(20),
         () => {
-          if ((Object(this.firebaseData) === this.firebaseData) && !Object.keys(this.firebaseData).length) {
             // Note(cg): emptyData.
+          if (this.isEmpty(this.firebaseData)) {
             if(this.defaultValue !== undefined) {
-              // console.info('setting defaultValue', this.$key, this.defaultValue)
               this.set(`data.${this.key}`, this.defaultValue);
             }
             return; 
           }
-          // console.info('setting VALUE', this.key, JSON.stringify(this.firebaseData))
           this.debounceFire();
-          return this.set(`data.${this.key}`, this.firebaseData);
+          // this.data[this.key] = this.firebaseData;
+          this.set(`data.${this.key}`, this.firebaseData);
+          this.notifyPath(`data.${this.key}`);
+          return;
         });
     },
 
+    isEmpty(data) {
+      return (Object(data) === data) && !Object.keys(data).length;
+    }
     // detached: function() {
     //   this.unlinkPaths(`data.${this.key}`, 'firebaseData');
     // },

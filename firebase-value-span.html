@@ -19,7 +19,7 @@
 
     </style>
     <firebase-document log="[[log]]" exists="{{exists}}" data="{{firebaseData}}" path="[[path]]" disabled="[[disabled]]" app="[[app]]" app-name="[[appName]]"></firebase-document>
-    [[displayValue]]
+    [[value]]
   </template>
   <script>
   Polymer({
@@ -32,11 +32,12 @@
 
     properties: {
       /* 
-       * `displayValue`  
+       * `value`  
        */
-      displayValue: {
+      value: {
         type: String,
-        computed: '_computeDisplayValue(exists, firebaseData, maxlength)'
+        notify: true, 
+        computed: '_computeValue(exists, firebaseData, maxlength)'
       },
 
       loadingValue: {
@@ -52,11 +53,7 @@
       },
     },
 
-    observers: [
-      // '_observeData(exists, defaultValue)'
-    ],
-
-    _computeDisplayValue: function(exists, firebaseData, maxlength) {
+    _computeValue: function(exists, firebaseData, maxlength) {
       const defaultValue = this.defaultValue || this.defaultValue === 0 ? this.defaultValue : '';
       const str = exists === false ?
         defaultValue :
